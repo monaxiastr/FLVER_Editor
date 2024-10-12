@@ -1,29 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Web.UI;
-using System.Web.Script.Serialization;
-
-
-using SoulsFormats;
-using System.Xml;
-using System.IO;
-using System.Xml.Serialization;
-using System.Numerics;
-using Microsoft.Xna.Framework.Graphics;
-using System.Text;
-using ObjLoader.Loader.Loaders;
-
-using Assimp;
-using System.Data;
+﻿using System.Windows.Forms;
 
 namespace MySFformat
 {
     public static class BasicTools
     {
-
         public static DialogResult ShowInputDialog(ref string input)
         {
             System.Drawing.Size size = new System.Drawing.Size(200, 70);
@@ -62,7 +42,5 @@ namespace MySFformat
             input = textBox.Text;
             return result;
         }
-
-
     }
 }

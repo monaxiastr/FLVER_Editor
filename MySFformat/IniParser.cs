@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MySFformat
 {
@@ -74,7 +68,6 @@ namespace MySFformat
 
                         strLine = iniFile.ReadLine();
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -88,7 +81,6 @@ namespace MySFformat
             }
             else
                 throw new FileNotFoundException("Unable to locate " + iniPath);
-
         }
 
         /// <summary>
