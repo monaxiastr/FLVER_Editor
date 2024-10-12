@@ -14,39 +14,45 @@ namespace MySFformat
 
         public static Matrix3D generateTranslationMatrix(float x, float y, float z)
         {
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { 1, 0, 0, x },
-                { 0, 1, 0, y },
-                { 0, 0, 1, z },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { 1, 0, 0, x },
+                    { 0, 1, 0, y },
+                    { 0, 0, 1, z },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
 
         public static Matrix3D generateScaleMatrix(float x, float y, float z)
         {
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { x, 0, 0, 0 },
-                { 0, y, 0, 0 },
-                { 0, 0, z, 0 },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { x, 0, 0, 0 },
+                    { 0, y, 0, 0 },
+                    { 0, 0, z, 0 },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
 
         public static Matrix3D generateScaleMatrix(Vector3D v)
         {
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { v.X, 0, 0, 0 },
-                { 0, v.Y, 0, 0 },
-                { 0, 0, v.Z, 0 },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { v.X, 0, 0, 0 },
+                    { 0, v.Y, 0, 0 },
+                    { 0, 0, v.Z, 0 },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
@@ -54,13 +60,15 @@ namespace MySFformat
         public static Matrix3D generateRotXMatrix(float a)
         {
             float rad = (float)(a / 180f * Math.PI);
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { 1, 0, 0, 0 },
-                { 0, C(rad), -S(rad), 0 },
-                { 0, S(rad), C(rad), 0 },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { 1, 0, 0, 0 },
+                    { 0, C(rad), -S(rad), 0 },
+                    { 0, S(rad), C(rad), 0 },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
@@ -68,13 +76,15 @@ namespace MySFformat
         public static Matrix3D generateRotYMatrix(float a)
         {
             float rad = (float)(a / 180f * Math.PI);
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { C(rad), 0, S(rad), 0 },
-                { 0, 1, 0, 0 },
-                { -S(rad), 0, C(rad), 0 },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { C(rad), 0, S(rad), 0 },
+                    { 0, 1, 0, 0 },
+                    { -S(rad), 0, C(rad), 0 },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
@@ -82,13 +92,15 @@ namespace MySFformat
         public static Matrix3D generateRotZMatrix(float a)
         {
             float rad = (float)(a / 180f * Math.PI);
-            Matrix3D m = new Matrix3D();
-            m.value = new float[,]
+            Matrix3D m = new Matrix3D
             {
-                { C(rad), -S(rad), 0, 0 },
-                { S(rad), C(rad), 0, 0 },
-                { 0, 0, 1, 0 },
-                { 0, 0, 0, 1 },
+                value = new float[,]
+                {
+                    { C(rad), -S(rad), 0, 0 },
+                    { S(rad), C(rad), 0, 0 },
+                    { 0, 0, 1, 0 },
+                    { 0, 0, 0, 1 },
+                }
             };
             return m;
         }
@@ -105,12 +117,9 @@ namespace MySFformat
 
         public static Vector3D matrixTimesVector3D(Matrix3D m, Vector3D v)
         {
-            float x = 0;
-            float y = 0;
-            float z = 0;
-            x = m.value[0, 0] * v.X + m.value[0, 1] * v.Y + m.value[0, 2] * v.Z + m.value[0, 3] * 1;
-            y = m.value[1, 0] * v.X + m.value[1, 1] * v.Y + m.value[1, 2] * v.Z + m.value[1, 3] * 1;
-            z = m.value[2, 0] * v.X + m.value[2, 1] * v.Y + m.value[2, 2] * v.Z + m.value[2, 3] * 1;
+            float x = m.value[0, 0] * v.X + m.value[0, 1] * v.Y + m.value[0, 2] * v.Z + m.value[0, 3] * 1;
+            float y = m.value[1, 0] * v.X + m.value[1, 1] * v.Y + m.value[1, 2] * v.Z + m.value[1, 3] * 1;
+            float z = m.value[2, 0] * v.X + m.value[2, 1] * v.Y + m.value[2, 2] * v.Z + m.value[2, 3] * 1;
 
             return new Vector3D(x, y, z);
         }

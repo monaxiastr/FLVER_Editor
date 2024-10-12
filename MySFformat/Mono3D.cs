@@ -68,9 +68,9 @@ namespace MySFformat
         public Mono3D()
         {
             Window.Title =
-                "FLVER Viewer by Forsakensilver, press F to refresh, press F1 F2 F3 F4 F5: Change render mode Right click: check vertex info B: Toggle bone display M: Dummy display";
+                "FLVER Viewer, F: refresh, F1 F2 F3 F4 F5: Change render mode, Right click: check vertex info, B: Toggle bone display, M: Dummy display";
             Window.AllowUserResizing = true;
-            this.IsMouseVisible = true;
+            IsMouseVisible = true;
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             // string path = @"data\img\27.png";
@@ -82,7 +82,7 @@ namespace MySFformat
             cm.MenuItems.Add(
                 "Check Vertex",
                 new EventHandler(
-                    delegate(Object o, EventArgs a)
+                    delegate (Object o, EventArgs a)
                     {
                         displayVerticesInfo();
                     }
@@ -92,7 +92,7 @@ namespace MySFformat
             cm.MenuItems.Add(
                 "Edit Vertex",
                 new EventHandler(
-                    delegate(Object o, EventArgs a)
+                    delegate (Object o, EventArgs a)
                     {
                         editVerticesInfo();
                     }
@@ -104,7 +104,7 @@ namespace MySFformat
             // mi0.Shortcut = Shortcut.Alt1;
             //  mi0.ShowShortcut = true;
             mi0.Click += new EventHandler(
-                delegate(Object o, EventArgs a)
+                delegate (Object o, EventArgs a)
                 {
                     deleteVertex();
                     // editVerticesInfo();
@@ -113,53 +113,31 @@ namespace MySFformat
             );
             cm.MenuItems.Add(mi0);
 
-            /*  cm.MenuItems.Add("Delete Vertex (related faceset)", new EventHandler(delegate (Object o, EventArgs a)
-              {
-                  deleteVertex();
-                  // editVerticesInfo();
-                  //    MessageBox.Show(targetV);
-
-              }));*/
 
 
             cm.MenuItems.Add(
                 "Delete Vertices Above",
                 new EventHandler(
-                    delegate(Object o, EventArgs a)
+                    delegate (Object o, EventArgs a)
                     {
                         deleteVertexAbove();
-                        // editVerticesInfo();
-                        //    MessageBox.Show(targetV);
                     }
                 )
             );
 
             MenuItem mi = new MenuItem();
             mi.Text = "Delete Vertices Below";
-            //    mi.Shortcut = Shortcut.CtrlD;
-            //   mi.ShowShortcut = true;
             mi.Click += new EventHandler(
-                delegate(Object o, EventArgs a)
+                delegate (Object o, EventArgs a)
                 {
                     deleteVertexBelow();
-                    // editVerticesInfo();
-                    //    MessageBox.Show(targetV);
                 }
             );
             cm.MenuItems.Add(mi);
-            /*  cm.MenuItems.Add("Delete Vertices Below", new EventHandler(delegate (Object o, EventArgs a)
-              {
-                  deleteVertexBelow();
-                  // editVerticesInfo();
-                  //    MessageBox.Show(targetV);
-
-              }));
-              */
-
             f.ContextMenu = cm;
 
-            f.MouseDown += new MouseEventHandler(this.pictureBox1_MouseDown);
-            f.MouseUp += new MouseEventHandler(this.pictureBox1_MouseUp);
+            f.MouseDown += new MouseEventHandler(pictureBox1_MouseDown);
+            f.MouseUp += new MouseEventHandler(pictureBox1_MouseUp);
         }
 
         private void deleteVertexBelow()
@@ -326,7 +304,7 @@ namespace MySFformat
             }
             //decrypt tpf file;
             string tpfFile =
-                Program.orgFileName.Substring(0, Program.orgFileName.Length - 5) + "tpf";
+                Program.flverName.Substring(0, Program.flverName.Length - 5) + "tpf";
 
             try
             {
@@ -338,7 +316,7 @@ namespace MySFformat
                             t.Name,
                             getTextureFromBitmap(
                                 readDdsStreamToBitmap(new MemoryStream(t.Bytes)),
-                                this.GraphicsDevice
+                                GraphicsDevice
                             )
                         );
                         //   System.Windows.MessageBox.Show("Added:" + t.Name);
@@ -353,28 +331,19 @@ namespace MySFformat
                             t.Name,
                             getTextureFromBitmap(
                                 readDdsStreamToBitmap(new MemoryStream(t.Bytes)),
-                                this.GraphicsDevice
+                                GraphicsDevice
                             )
                         );
                         //   System.Windows.MessageBox.Show("Added:" + t.Name);
                     }
                 }
             }
-            catch (Exception e) { }
+            catch (Exception e) { throw e; }
 
             using (var stream = TitleContainer.OpenStream("singleColor.png"))
             {
-                testTexture = Texture2D.FromStream(this.GraphicsDevice, stream);
+                testTexture = Texture2D.FromStream(GraphicsDevice, stream);
             }
-            //  testTexture = getTextureFromBitmap(readDdsFileToBitmap("EliteKnight.dds"),this.GraphicsDevice);
-
-
-            /*  string path = @"data\img\27.png";
-
-              System.Drawing.Bitmap btt = new System.Drawing.Bitmap(path);
-              test = Texture2D.FromStream(this.GraphicsDevice, File.OpenRead(path));
-              test = getTextureFromBitmap(btt, this.GraphicsDevice);*/
-            // TODO: use this.Content to load your game content here
         }
 
         System.Drawing.Bitmap readDdsStreamToBitmap(Stream f)
@@ -457,21 +426,11 @@ namespace MySFformat
         }
 
         /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
-        protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
-        }
-
-        /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         ///
-
         protected void checkVerticesSilent()
         {
             Ray r = GetMouseRay(
@@ -481,20 +440,14 @@ namespace MySFformat
             );
             r.Position = new Vector3(r.Position.X, r.Position.Z, r.Position.Y);
             r.Direction = new Vector3(r.Direction.X, r.Direction.Z, r.Direction.Y);
-            // Vector3D x1 =  new Vector3D(cameraX + offsetX, cameraY + offsetY, cameraZ + offsetZ);
-            //Vector3D x2 = new Vector3D(centerX + offsetX, centerY + offsetY, centerZ + offsetZ);
             Vector3D x1 = new Vector3D(r.Position);
             Vector3D x2 = new Vector3D(r.Position + r.Direction);
-            //Program.useCheckingPoint = true;
-            // Program.checkingPoint = new System.Numerics.Vector3(x2.X,x2.Z,x2.Y);
-            // Program.updateVertices();
             Vector3D miniPoint = new Vector3D();
             float ptDistance = float.MaxValue;
             targetV = null;
             targetVinfo = null;
 
             for (int i = 0; i < Program.vertices.Count; i++)
-            //  foreach (SoulsFormats.FLVER.Vertex v in Program.vertices)
             {
                 SoulsFormats.FLVER.Vertex v = Program.vertices[i];
                 if (v.Positions[0] == null)
@@ -531,18 +484,13 @@ namespace MySFformat
                 miniPoint.Z
             );
 
-            if (targetV.Normals != null && targetV.Normals.Count > 0)
-            {
-                Program.checkingPointNormal = new System.Numerics.Vector3(
+            Program.checkingPointNormal = targetV.Normals != null && targetV.Normals.Count > 0
+                ? new System.Numerics.Vector3(
                     targetV.Normals[0].X,
                     targetV.Normals[0].Y,
                     targetV.Normals[0].Z
-                );
-            }
-            else
-            {
-                Program.checkingPointNormal = new System.Numerics.Vector3(0, 0, 0);
-            }
+                )
+                : new System.Numerics.Vector3(0, 0, 0);
 
             Program.UpdateVertices();
         }
@@ -709,10 +657,6 @@ namespace MySFformat
 
             float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            //Marine_Yes00.mp3
-
-
-
             if (mState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && IsActive)
             {
                 float mdx = mState.X - prevMState.X;
@@ -840,7 +784,7 @@ namespace MySFformat
             //1.73 Added focus detect
             if (
                 mState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed
-                && this.IsActive
+                && IsActive
                 && false
             )
             {
@@ -851,22 +795,15 @@ namespace MySFformat
                 );
                 r.Position = new Vector3(r.Position.X, r.Position.Z, r.Position.Y);
                 r.Direction = new Vector3(r.Direction.X, r.Direction.Z, r.Direction.Y);
-                // Vector3D x1 =  new Vector3D(cameraX + offsetX, cameraY + offsetY, cameraZ + offsetZ);
-                //Vector3D x2 = new Vector3D(centerX + offsetX, centerY + offsetY, centerZ + offsetZ);
                 Vector3D x1 = new Vector3D(r.Position);
                 Vector3D x2 = new Vector3D(r.Position + r.Direction);
-                //Program.useCheckingPoint = true;
-                // Program.checkingPoint = new System.Numerics.Vector3(x2.X,x2.Z,x2.Y);
-                // Program.updateVertices();
                 Vector3D miniPoint = new Vector3D();
                 float ptDistance = float.MaxValue;
                 SoulsFormats.FLVER.Vertex targetV = null;
                 foreach (SoulsFormats.FLVER.Vertex v in Program.vertices)
                 {
                     if (v.Positions[0] == null)
-                    {
                         continue;
-                    }
                     float dis = Vector3D.calculateDistanceFromLine(
                         new Vector3D(v.Positions[0]),
                         x1,
@@ -896,18 +833,13 @@ namespace MySFformat
                     miniPoint.Z
                 );
 
-                if (targetV.Normals != null && targetV.Normals.Count > 0)
-                {
-                    Program.checkingPointNormal = new System.Numerics.Vector3(
+                Program.checkingPointNormal = targetV.Normals != null && targetV.Normals.Count > 0
+                    ? new System.Numerics.Vector3(
                         targetV.Normals[0].X,
                         targetV.Normals[0].Y,
                         targetV.Normals[0].Z
-                    );
-                }
-                else
-                {
-                    Program.checkingPointNormal = new System.Numerics.Vector3(0, 0, 0);
-                }
+                    )
+                    : new System.Numerics.Vector3(0, 0, 0);
 
                 Program.UpdateVertices();
 
@@ -1072,11 +1004,6 @@ namespace MySFformat
             prevState = state;
             prevMState = mState;
             base.Update(gameTime);
-        }
-
-        private Vector3 RotatePoint()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>

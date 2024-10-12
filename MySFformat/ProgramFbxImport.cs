@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Assimp;
+using SoulsFormats;
+using SoulsFormats.KF4;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using Assimp;
-using SoulsFormats;
 
 namespace MySFformat
 {
@@ -13,27 +14,21 @@ namespace MySFformat
     {
         //Current, best version can load FBX, OBJ, DAE etc.
         //Use assimp library
-        static void importFBX()
+        static void ImportFBX()
         {
             AssimpContext importer = new AssimpContext();
 
-            // importer.SetConfig(new NormalSmoothingAngleConfig(66.0f));
-
-            //m_model.Meshes[0].Bones[0].VertexWeights[0].
             var openFileDialog2 = new OpenFileDialog();
-            string res = "";
             if (openFileDialog2.ShowDialog() != DialogResult.OK)
-            {
                 return;
-            }
-            res = openFileDialog2.FileName;
+
+            string res = openFileDialog2.FileName;
 
             //Prepare bone name convertion table:
             string assemblyPath = Path.GetDirectoryName(
                 System.Reflection.Assembly.GetExecutingAssembly().Location
             );
-            string convertStr = File.ReadAllText(assemblyPath + "\\boneConvertion.ini");
-            string[] convertStrlines = convertStr.Split(
+            string[] convertStrlines = File.ReadAllText(assemblyPath + "\\boneConvertion.ini").Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             );
@@ -42,13 +37,9 @@ namespace MySFformat
             {
                 string target = convertStrlines[i2];
                 if (target == null)
-                {
                     continue;
-                }
                 if (target.IndexOf('#') == 0)
-                {
                     continue;
-                }
                 Console.WriteLine(target + "->" + convertStrlines[i2 + 1]);
                 convertionTable.Add(target, convertStrlines[i2 + 1]);
                 i2++;
@@ -56,20 +47,19 @@ namespace MySFformat
 
             //Table prepartion finished
 
-            Scene md = importer.ImportFile(res, PostProcessSteps.CalculateTangentSpace); // PostProcessPreset.TargetRealTimeMaximumQuality
+            Scene model = importer.ImportFile(res, PostProcessSteps.CalculateTangentSpace); // PostProcessPreset.TargetRealTimeMaximumQuality
 
-            MessageBox.Show(
-                "Meshes count:" + md.Meshes.Count + "Material count:" + md.MaterialCount + ""
-            );
+            MessageBox.Show($"Meshes count:{model.Meshes.Count}, Material count:{model.MaterialCount}");
 
-            boneParentList = new Dictionary<String, String>();
+            boneParentList = new Dictionary<string, string>();
             //Build the parent list of bones.
 
-            printNodeStruct(md.RootNode);
+            printNodeStruct(model.RootNode);
 
             //First, added a custom default layout.
             int layoutCount = targetFlver.BufferLayouts.Count;
-            FLVER.BufferLayout newBL = new FLVER.BufferLayout
+
+            targetFlver.BufferLayouts.Add(new FLVER.BufferLayout
             {
                 new FLVER.BufferLayout.Member(
                     0,
@@ -127,159 +117,146 @@ namespace MySFformat
                     FLVER.BufferLayout.MemberSemantic.UV,
                     0
                 )
-            };
-
-            targetFlver.BufferLayouts.Add(newBL);
+            });
 
             int materialCount = targetFlver.Materials.Count;
-            Boolean flipYZ = false;
-            Boolean setTexture = true;
-            Boolean setAmbientAsDiffuse = false;
-            Boolean setLOD = false;
 
-            var confirmResult = MessageBox.Show(
-                "Do you want to switch YZ axis values? \n It may help importing some fbx files.",
-                "Set",
-                MessageBoxButtons.YesNo
-            );
-            if (confirmResult == DialogResult.Yes)
+            bool setAmbientAsDiffuse = false;
+
+            bool flipYZ = MessageBox.Show(
+                "Switch YZ axis values? \n It may help importing some fbx files.",
+                "Set", MessageBoxButtons.YesNo ) == DialogResult.Yes;
+
+            bool setLOD = true;
+
+            List<FLVER.Texture> defaultTextures = new List<FLVER.Texture>
             {
-                flipYZ = true;
-            }
+                new FLVER.Texture("g_DiffuseTexture",
+                    "texture.tif",
+                    1,1,1,true,0,0,0),
+                new FLVER.Texture("SAT_Equip_snp_Texture2D_1_BlendMask",
+                    "N:\\FDP\\data\\Other\\SysTex\\SYSTEX_DummyBurn_m.tif",
+                    1,1,0,false,0,0,0),
+                new FLVER.Texture("SAT_Equip_snp_Texture2D_0_EmissiveMap_0",
+                    "N:\\FDP\\data\\Other\\SysTex\\SYSTEX_DummyBurn_em.tif",
+                    1,1,0,false,0,0,0),
+                new FLVER.Texture("SAT_Equip_snp_Texture2D_2_DamageNormal",
+                    "N:\\FDP\\data\\Other\\SysTex\\SYSTEX_DummyDamagedNormal.tif",
+                    1,1,0,false,0,0,0),
+                new FLVER.Texture("g_BumpmapTexture",
+                    "b.tif",
+                    1,1,1,true,0,0,0),
+                new FLVER.Texture("g_BumpmapTexture",
+                    "s.tif",
+                    1,1,1,true,0,0,0)
+            };
 
-
-            var confirmResult3 = MessageBox.Show(
-                "Set LOD level? (Only neccssary if this model need to be viewed far away)",
-                "Set",
-                MessageBoxButtons.YesNo
-            );
-            if (confirmResult3 == DialogResult.Yes)
-                setLOD = true;
-
-            foreach (var mat in md.Materials)
+            foreach (var material in model.Materials)
             {
-                FLVER.Material matnew = new JavaScriptSerializer().Deserialize<FLVER.Material>(
-                    new JavaScriptSerializer().Serialize(targetFlver.Materials[0])
-                );
-                matnew.Name = res.Substring(res.LastIndexOf('\\') + 1) + "_" + mat.Name;
-                // mat.HasTextureDiffuse
-
-                if (setTexture)
+                
+                FLVER.Material newMaterial = new FLVER.Material
                 {
-                    if (setAmbientAsDiffuse)
-                    {
-                        if (mat.HasTextureEmissive)
-                            SetFlverMatPath(
-                                matnew,
-                                "g_DiffuseTexture",
-                                FindFileName(mat.TextureEmissive.FilePath) + ".tif"
-                            );
-                    }
-                    else if (mat.HasTextureDiffuse) //g_DiffuseTexture
-                        SetFlverMatPath(
-                            matnew,
-                            "g_DiffuseTexture",
-                            FindFileName(mat.TextureDiffuse.FilePath) + ".tif"
-                        );
-                    if (mat.HasTextureNormal) //g_BumpmapTexture
-                        SetFlverMatPath(
-                            matnew,
-                            "g_BumpmapTexture",
-                            FindFileName(mat.TextureNormal.FilePath) + ".tif"
-                        );
-                    if (mat.HasTextureSpecular) //g_SpecularTexture
-                        SetFlverMatPath(
-                            matnew,
-                            "g_SpecularTexture",
-                            FindFileName(mat.TextureSpecular.FilePath) + ".tif"
-                        );
+                    Name = res.Substring(res.LastIndexOf('\\') + 1) + "_" + material.Name,
+                    MTD = "P[ARSN]_e.mtd",
+                    Flags = 1342,
+                    Textures = defaultTextures,
+                    GXBytes = new byte[] { 71, 88, 77, 68, 242, 0, 0, 0, 28, 0, 0, 0, 1, 0, 0, 0, 31, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 71, 88, 48, 48, 100, 0, 0, 0, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 48, 52, 100, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 64, 0, 0, 128, 63, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 160, 64, 0, 0, 0, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 56, 48, 100, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 56, 49, 100, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 127, 100, 0, 0, 0, 12, 0, 0, 0 }
+                };
+                
+                if (setAmbientAsDiffuse)
+                {
+                    if (material.HasTextureEmissive)
+                        SetFlverMatPath(newMaterial, "g_DiffuseTexture",
+                            FindFileName(material.TextureEmissive.FilePath) + ".tif");
                 }
-                targetFlver.Materials.Add(matnew);
+                else if (material.HasTextureDiffuse) //g_DiffuseTexture
+                    SetFlverMatPath(newMaterial, "g_DiffuseTexture",
+                        FindFileName(material.TextureDiffuse.FilePath) + ".tif");
+
+                if (material.HasTextureNormal) //g_BumpmapTexture
+                    SetFlverMatPath(newMaterial, "g_BumpmapTexture",
+                        FindFileName(material.TextureNormal.FilePath) + ".tif");
+
+                if (material.HasTextureSpecular) //g_SpecularTexture
+                    SetFlverMatPath(newMaterial, "g_SpecularTexture",
+                        FindFileName(material.TextureSpecular.FilePath) + ".tif");
+                targetFlver.Materials.Add(newMaterial);
             }
 
-            foreach (var m in md.Meshes)
+            foreach (var mesh in model.Meshes)
             {
-                FLVER.Mesh mn = new FLVER.Mesh();
-                mn.MaterialIndex = 0;
-                mn.BoneIndices = new List<int>();
-                mn.BoneIndices.Add(0);
-                mn.BoneIndices.Add(1);
-                mn.BoundingBoxMax = new Vector3(1, 1, 1);
-                mn.BoundingBoxMin = new Vector3(-1, -1, -1);
-                mn.BoundingBoxUnk = new Vector3();
-                mn.Unk1 = 0;
-                mn.DefaultBoneIndex = 0;
-                mn.Dynamic = true;
-                mn.VertexBuffers = new List<FLVER.VertexBuffer>();
-                mn.VertexBuffers.Add(new FLVER.VertexBuffer(0, layoutCount, -1));
-                mn.Vertices = new List<FLVER.Vertex>();
+                FLVER.Mesh newMesh = new FLVER.Mesh
+                {
+                    MaterialIndex = 0,
+                    BoneIndices = new List<int> { 0, 1 },
+                    BoundingBoxMax = new Vector3(1, 1, 1),
+                    BoundingBoxMin = new Vector3(-1, -1, -1),
+                    BoundingBoxUnk = new Vector3(),
+                    Unk1 = 0,
+                    DefaultBoneIndex = 0,
+                    Dynamic = true,
+                    VertexBuffers = new List<FLVER.VertexBuffer> { new FLVER.VertexBuffer(0, layoutCount, -1) },
+                    Vertices = new List<FLVER.Vertex>()
+                };
 
                 List<List<int>> verticesBoneIndices = new List<List<int>>();
                 List<List<float>> verticesBoneWeights = new List<List<float>>();
 
                 //If it has bones, then record the bone weight info
-                if (m.HasBones)
+                if (mesh.HasBones)
                 {
-                    for (int i2 = 0; i2 < m.VertexCount; i2++)
+                    for (int i = 0; i < mesh.VertexCount; i++)
                     {
                         verticesBoneIndices.Add(new List<int>());
                         verticesBoneWeights.Add(new List<float>());
                     }
 
-                    for (int i2 = 0; i2 < m.BoneCount; i2++)
+                    for (int i = 0; i < mesh.BoneCount; i++)
                     {
-                        string boneName = m.Bones[i2].Name;
-                        int boneIndex = 0;
+                        string boneName = mesh.Bones[i].Name;
+                        int boneIndex = FindFLVER_Bone(targetFlver, boneName);
 
-                        if (convertionTable.ContainsKey(m.Bones[i2].Name))
+                        if (convertionTable.ContainsKey(mesh.Bones[i].Name))
                         {
                             boneName = convertionTable[boneName];
-                            // m.Bones[i2].Name = convertionTable[m.Bones[i2].Name];
                             boneIndex = FindFLVER_Bone(targetFlver, boneName);
                         }
                         else
                         {
                             Console.WriteLine("Cannot find ->" + boneName);
                             //If cannot find a corresponding boneName in convertion.ini then
-                            //Try to find org bone's parent, check if it
-                            boneIndex = FindFLVER_Bone(targetFlver, boneName);
-
                             //if such bone can not be found in flver, then check its parent to see if it can be convert to its parent bone.
                             //check up to 5th grand parent.
-                            for (int bp = 0; bp < boneFindParentTimes; bp++)
-                                if (boneIndex == -1)
-                                    if (boneParentList.ContainsValue(boneName))
-                                        if (boneParentList[boneName] != null)
-                                        {
-                                            boneName = boneParentList[boneName];
-                                            if (convertionTable.ContainsKey(boneName))
-                                                boneName = convertionTable[boneName];
-                                            boneIndex = FindFLVER_Bone(targetFlver, boneName);
-                                        }
+                            for (int bp = 0; boneIndex == -1 && bp < boneFindParentTimes; bp++)
+                                if (boneParentList.ContainsValue(boneName) && boneParentList[boneName] != null)
+                                {
+                                    boneName = boneParentList[boneName];
+                                    if (convertionTable.ContainsKey(boneName))
+                                        boneName = convertionTable[boneName];
+                                    boneIndex = FindFLVER_Bone(targetFlver, boneName);
+                                }
                         }
                         if (boneIndex == -1)
-                        {
                             boneIndex = 0;
-                        }
-                        for (int i3 = 0; i3 < m.Bones[i2].VertexWeightCount; i3++)
+                        for (int j = 0; j < mesh.Bones[i].VertexWeightCount; j++)
                         {
-                            var vw = m.Bones[i2].VertexWeights[i3];
+                            var vertexWeight = mesh.Bones[i].VertexWeights[j];
 
-                            verticesBoneIndices[vw.VertexID].Add(boneIndex);
-                            verticesBoneWeights[vw.VertexID].Add(vw.Weight);
+                            verticesBoneIndices[vertexWeight.VertexID].Add(boneIndex);
+                            verticesBoneWeights[vertexWeight.VertexID].Add(vertexWeight.Weight);
                         }
                     }
                 }
 
-                for (int i = 0; i < m.Vertices.Count; i++)
+                for (int i = 0; i < mesh.Vertices.Count; i++)
                 {
-                    var vit = m.Vertices[i];
-                    var channels = m.TextureCoordinateChannels[0];
+                    var vit = mesh.Vertices[i];
+                    var channels = mesh.TextureCoordinateChannels[0];
 
                     var uv1 = new Vector3D();
                     var uv2 = new Vector3D();
 
-                    if (channels != null && m.TextureCoordinateChannelCount > 0)
+                    if (channels != null && mesh.TextureCoordinateChannelCount > 0)
                     {
                         uv1 = getMyV3D(channels[i]);
                         uv1.Y = 1 - uv1.Y;
@@ -288,16 +265,16 @@ namespace MySFformat
                     }
 
                     var normal = new Vector3D(0, 1, 0);
-                    if (m.HasNormals && m.Normals.Count > i)
-                        normal = getMyV3D(m.Normals[i]).normalize();
+                    if (mesh.HasNormals && mesh.Normals.Count > i)
+                        normal = getMyV3D(mesh.Normals[i]).normalize();
 
                     var tangent = new Vector3D(1, 0, 0);
-                    if (m.Tangents.Count > i)
-                        tangent = getMyV3D(m.Tangents[i]).normalize();
-                    else if (m.HasNormals && m.Normals.Count > i)
+                    if (mesh.Tangents.Count > i)
+                        tangent = getMyV3D(mesh.Tangents[i]).normalize();
+                    else if (mesh.HasNormals && mesh.Normals.Count > i)
                         tangent = new Vector3D(
                             crossPorduct(
-                                getMyV3D(m.Normals[i]).normalize().toXnaV3(),
+                                getMyV3D(mesh.Normals[i]).normalize().toXnaV3(),
                                 normal.toXnaV3()
                             )
                         ).normalize();
@@ -321,125 +298,123 @@ namespace MySFformat
                             1
                         );
 
-                    if (m.HasBones)
+                    if (mesh.HasBones)
                         for (int j = 0; j < verticesBoneIndices[i].Count && j < 4; j++)
                         {
                             v.BoneIndices[j] = (verticesBoneIndices[i])[j];
                             v.BoneWeights[j] = (verticesBoneWeights[i])[j];
                         }
-                    mn.Vertices.Add(v);
+                    newMesh.Vertices.Add(v);
                 }
 
                 List<uint> faceIndexs = new List<uint>();
-                for (int i = 0; i < m.FaceCount; i++)
+                for (int i = 0; i < mesh.FaceCount; i++)
                 {
                     if (flipYZ)
                     {
-                        if (m.Faces[i].Indices.Count == 3)
+                        if (mesh.Faces[i].Indices.Count == 3)
                         {
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[1]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[1]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
                         }
-                        else if (m.Faces[i].Indices.Count == 4)
+                        else if (mesh.Faces[i].Indices.Count == 4)
                         {
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[1]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[1]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
 
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[3]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[3]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
                         }
                     }
                     else
                     {
-                        if (m.Faces[i].Indices.Count == 3)
+                        if (mesh.Faces[i].Indices.Count == 3)
                         {
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[1]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[1]);
                         }
-                        else if (m.Faces[i].Indices.Count == 4)
+                        else if (mesh.Faces[i].Indices.Count == 4)
                         {
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[1]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[1]);
 
-                            faceIndexs.Add((uint)m.Faces[i].Indices[2]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[0]);
-                            faceIndexs.Add((uint)m.Faces[i].Indices[3]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[2]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[0]);
+                            faceIndexs.Add((uint)mesh.Faces[i].Indices[3]);
                         }
                     }
                 }
-                mn.FaceSets = new List<FLVER.FaceSet>
+                newMesh.FaceSets = new List<FLVER.FaceSet>{ generateBasicFaceSet() };
+                newMesh.FaceSets[0].Vertices = faceIndexs.ToArray();
+                if (newMesh.FaceSets[0].Vertices.Length > 65534)
                 {
-                    generateBasicFaceSet()
-                };
-                mn.FaceSets[0].Vertices = faceIndexs.ToArray();
-                if (mn.FaceSets[0].Vertices.Length > 65534)
-                {
-                    MessageBox.Show(
-                        "There are more than 65535 vertices in a mesh , switch to 32 bits index size mode."
-                    );
-                    mn.FaceSets[0].IndexSize = 32;
+                    Console.WriteLine("There are more than 65535 vertices in a newMesh , switch to 32 bits index size mode.");
+                    newMesh.FaceSets[0].IndexSize = 32;
                 }
 
                 if (setLOD == true)
-                {
-                    //Special thanks to Meowmaritus
-                    {
-                        FLVER.FaceSet fs = generateBasicFaceSet();
-                        fs.Flags = SoulsFormats.FLVER.FaceSet.FSFlags.LodLevel1;
-                        fs.IndexSize = mn.FaceSets[0].IndexSize;
-                        fs.Vertices = (uint[])(mn.FaceSets[0].Vertices.Clone());
-                        mn.FaceSets.Add(fs);
-                    }
+                {//Special thanks to Meowmaritus
+                    newMesh.FaceSets.Add(generateBasicFaceSet(
+                        FLVER.FaceSet.FSFlags.LodLevel1,
+                        newMesh.FaceSets[0].IndexSize,
+                        (uint[])newMesh.FaceSets[0].Vertices.Clone()));
 
-                    {
-                        FLVER.FaceSet fs = generateBasicFaceSet();
-                        fs.Flags = SoulsFormats.FLVER.FaceSet.FSFlags.LodLevel2;
-                        fs.IndexSize = mn.FaceSets[0].IndexSize;
-                        fs.Vertices = (uint[])(mn.FaceSets[0].Vertices.Clone());
-                        mn.FaceSets.Add(fs);
-                    }
+                    newMesh.FaceSets.Add(generateBasicFaceSet(
+                        FLVER.FaceSet.FSFlags.LodLevel2,
+                        newMesh.FaceSets[0].IndexSize,
+                        (uint[])newMesh.FaceSets[0].Vertices.Clone()));
+
+                    newMesh.FaceSets.Add(generateBasicFaceSet(
+                        FLVER.FaceSet.FSFlags.Unk80000000,
+                        newMesh.FaceSets[0].IndexSize,
+                        (uint[])newMesh.FaceSets[0].Vertices.Clone()));
+
+                    newMesh.FaceSets.Add(generateBasicFaceSet(
+                        FLVER.FaceSet.FSFlags.LodLevel1 | FLVER.FaceSet.FSFlags.Unk80000000,
+                        newMesh.FaceSets[0].IndexSize,
+                        (uint[])newMesh.FaceSets[0].Vertices.Clone()));
+
+                    newMesh.FaceSets.Add(generateBasicFaceSet(
+                        FLVER.FaceSet.FSFlags.LodLevel2 | FLVER.FaceSet.FSFlags.Unk80000000,
+                        newMesh.FaceSets[0].IndexSize,
+                        (uint[])newMesh.FaceSets[0].Vertices.Clone()));
+
                     //unk8000000000 is the motion blur
-                    {
-                        FLVER.FaceSet fs = generateBasicFaceSet();
-                        fs.Flags = SoulsFormats.FLVER.FaceSet.FSFlags.Unk80000000;
-                        fs.IndexSize = mn.FaceSets[0].IndexSize;
-                        fs.Vertices = (uint[])(mn.FaceSets[0].Vertices.Clone());
-                        mn.FaceSets.Add(fs);
-                    }
-
-                    {
-                        FLVER.FaceSet fs = generateBasicFaceSet();
-                        fs.Flags =
-                            SoulsFormats.FLVER.FaceSet.FSFlags.LodLevel1
-                            | SoulsFormats.FLVER.FaceSet.FSFlags.Unk80000000;
-                        fs.IndexSize = mn.FaceSets[0].IndexSize;
-                        fs.Vertices = (uint[])(mn.FaceSets[0].Vertices.Clone());
-                        mn.FaceSets.Add(fs);
-                    }
-
-                    {
-                        FLVER.FaceSet fs = generateBasicFaceSet();
-                        fs.Flags =
-                            SoulsFormats.FLVER.FaceSet.FSFlags.LodLevel2
-                            | SoulsFormats.FLVER.FaceSet.FSFlags.Unk80000000;
-                        fs.IndexSize = mn.FaceSets[0].IndexSize;
-                        fs.Vertices = (uint[])(mn.FaceSets[0].Vertices.Clone());
-                        mn.FaceSets.Add(fs);
-                    }
                 }
 
-                mn.MaterialIndex = materialCount + m.MaterialIndex;
+                newMesh.MaterialIndex = materialCount + mesh.MaterialIndex;
 
-                targetFlver.Meshes.Add(mn);
+                targetFlver.Meshes.Add(newMesh);
             }
 
-            MessageBox.Show("Added a custom mesh! PLease click modify to save it!");
+            MessageBox.Show("Model imported successfully! PLease click modify to save it!");
             UpdateVertices();
         }
+
+        public static void SetFlverMatPath(FLVER.Material mesh, string typeName, string newPath)
+        {
+            for (int i = 0; i < mesh.Textures.Count; i++)
+                if (mesh.Textures[i].Type == typeName)
+                {
+                    mesh.Textures[i].Path = newPath;
+                    return;
+                }
+
+            mesh.Textures.Add(new FLVER.Texture
+            {
+                Type = typeName,
+                Path = newPath,
+                ScaleX = 1,
+                ScaleY = 1,
+                Unk10 = 1,
+                Unk11 = true
+            });
+        }
+
     }
 }

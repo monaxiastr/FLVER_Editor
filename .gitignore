@@ -3,6 +3,6 @@
 ################################################################################
 
 /.vs/MySFformat
-/MySFformat/bin/Debug
-/MySFformat/obj/Debug
+/MySFformat/bin
+/MySFformat/obj
 /MySFformat/.vs

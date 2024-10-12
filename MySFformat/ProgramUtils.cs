@@ -1,36 +1,31 @@
-﻿using System;
+﻿using Assimp;
+using SoulsFormats;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
 using System.Windows.Forms;
-using Assimp;
-using SoulsFormats;
+using static SoulsFormats.FLVER.FaceSet;
 
 namespace MySFformat
 {
     static partial class Program
     {
-        public static Microsoft.Xna.Framework.Vector3 toXnaV3(System.Numerics.Vector3 v)
+        public static Microsoft.Xna.Framework.Vector3 toXnaV3(Vector3 v)
         {
             return new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z);
         }
 
-        public static Microsoft.Xna.Framework.Vector3 toXnaV3XZY(System.Numerics.Vector3 v)
+        public static Microsoft.Xna.Framework.Vector3 toXnaV3XZY(Vector3 v)
         {
             return new Microsoft.Xna.Framework.Vector3(v.X, v.Z, v.Y);
         }
 
-        public static Vector3 findBoneTrans(
-            List<FLVER.Bone> b,
-            int index,
-            Vector3 v = new Vector3()
-        )
+        public static Vector3 findBoneTrans(List<FLVER.Bone> b, int index)
         {
             if (bonePosList[index] != null)
-            {
                 return bonePosList[index].toNumV3();
-            }
 
             if (b[index].ParentIndex == -1)
             {
@@ -41,28 +36,6 @@ namespace MySFformat
             Vector3 ans = b[index].Translation + findBoneTrans(b, b[index].ParentIndex);
             bonePosList[index] = new Vector3D(ans);
             return ans;
-        }
-
-        class VertexNormalList
-        {
-            public List<Vector3D> normals = new List<Vector3D>();
-
-            public VertexNormalList() { }
-
-            public Vector3D calculateAvgNormal()
-            {
-                Vector3D ans = new Vector3D();
-                foreach (var n in normals)
-                {
-                    ans = ans + n;
-                }
-                return ans.normalize();
-            }
-
-            public void add(Vector3D a)
-            {
-                normals.Add(a);
-            }
         }
 
         static void printNodeStruct(Node n, int depth = 0, String parent = null)
@@ -120,16 +93,18 @@ namespace MySFformat
             return new Vector3D(v.X, v.Y, v.Z);
         }
 
-        static FLVER.FaceSet generateBasicFaceSet()
+        static FLVER.FaceSet generateBasicFaceSet(FSFlags flags = FSFlags.None, int indexSize = 16, uint[] vertices = null)
         {
-            FLVER.FaceSet ans = new FLVER.FaceSet();
-            ans.CullBackfaces = true;
-            ans.TriangleStrip = false;
-            ans.Unk06 = 1;
-            ans.Unk07 = 0;
-            ans.IndexSize = 16;
-
-            return ans;
+            return new FLVER.FaceSet
+            {
+                CullBackfaces = true,
+                TriangleStrip = false,
+                Unk06 = 1,
+                Unk07 = 0,
+                IndexSize = indexSize,
+                Flags = flags,
+                Vertices = vertices
+            };
         }
 
         static FLVER.Vertex generateVertex(
@@ -142,20 +117,13 @@ namespace MySFformat
         )
         {
             FLVER.Vertex ans = new FLVER.Vertex();
-            ans.Positions = new List<Vector3>();
-            ans.Positions.Add(pos);
+            ans.Positions = new List<Vector3> { pos };
             ans.BoneIndices = new int[4] { 0, 0, 0, 0 };
             ans.BoneWeights = new float[4] { 1, 0, 0, 0 };
-            ans.UVs = new List<Vector3>();
-            ans.UVs.Add(uv1);
-            ans.UVs.Add(uv2);
-            ans.Normals = new List<Vector4>();
-            ans.Normals.Add(new Vector4(normal.X, normal.Y, normal.Z, -1f));
-            ans.Tangents = new List<Vector4>();
-            ans.Tangents.Add(new Vector4(tangets.X, tangets.Y, tangets.Z, tangentW));
-            ans.Tangents.Add(new Vector4(tangets.X, tangets.Y, tangets.Z, tangentW));
-            ans.Colors = new List<FLVER.Vertex.Color>();
-            ans.Colors.Add(new FLVER.Vertex.Color(255, 255, 255, 255));
+            ans.UVs = new List<Vector3> { uv1, uv2 };
+            ans.Normals = new List<Vector4> { new Vector4(normal.X, normal.Y, normal.Z, -1f) };
+            ans.Tangents = new List<Vector4> { new Vector4(tangets.X, tangets.Y, tangets.Z, tangentW), new Vector4(tangets.X, tangets.Y, tangets.Z, tangentW) };
+            ans.Colors = new List<FLVER.Vertex.Color> { new FLVER.Vertex.Color(255, 255, 255, 255) };
 
             return ans;
         }
@@ -165,27 +133,19 @@ namespace MySFformat
             Vector3 uv1,
             Vector3 uv2,
             Vector4 normal,
-            Vector4 tangets,
-            int tangentW = -1
+            Vector4 tangets
         )
         {
-            FLVER.Vertex ans = new FLVER.Vertex();
-            ans.Positions = new List<Vector3>();
-            ans.Positions.Add(pos);
-            ans.BoneIndices = new int[4] { 0, 0, 0, 0 };
-            ans.BoneWeights = new float[4] { 1, 0, 0, 0 };
-            ans.UVs = new List<Vector3>();
-            ans.UVs.Add(uv1);
-            ans.UVs.Add(uv2);
-            ans.Normals = new List<Vector4>();
-            ans.Normals.Add(new Vector4(normal.X, normal.Y, normal.Z, normal.W));
-            ans.Tangents = new List<Vector4>();
-            ans.Tangents.Add(new Vector4(tangets.X, tangets.Y, tangets.Z, tangets.W));
-            ans.Tangents.Add(new Vector4(tangets.X, tangets.Y, tangets.Z, tangets.W));
-            ans.Colors = new List<FLVER.Vertex.Color>();
-            ans.Colors.Add(new FLVER.Vertex.Color(255, 255, 255, 255));
-
-            return ans;
+            return new FLVER.Vertex
+            {
+                Positions = new List<Vector3> { pos },
+                BoneIndices = new int[4] { 0, 0, 0, 0 },
+                BoneWeights = new float[4] { 1, 0, 0, 0 },
+                UVs = new List<Vector3> { uv1, uv2 },
+                Normals = new List<Vector4> { normal },
+                Tangents = new List<Vector4> { tangets, tangets },
+                Colors = new List<FLVER.Vertex.Color> { new FLVER.Vertex.Color(255, 255, 255, 255) }
+            };
         }
 
         /*************** Basic Tools section *****************/
@@ -354,17 +314,6 @@ namespace MySFformat
                 return;
             FLVER src = FLVER.Read(openFileDialog2.FileName);
 
-            Console.WriteLine(b.Header);
-
-            Console.WriteLine("Seikiro unk is:" + b.SekiroUnk);
-
-            Console.WriteLine("Material:");
-            foreach (FLVER.Material m in b.Materials)
-                Console.WriteLine(m.Name);
-
-            foreach (FLVER.Mesh m in b.Meshes)
-                Console.WriteLine("Mesh#" + m.MaterialIndex);
-
             Form f = new Form();
 
             Label l = new Label();
@@ -446,7 +395,7 @@ namespace MySFformat
                             {
                                 continue;
                             }
-                            v.Positions[j] = new System.Numerics.Vector3(0, 0, 0);
+                            v.Positions[j] = new Vector3(0, 0, 0);
                             for (int k = 0; k < v.BoneWeights.Length; k++)
                             {
                                 v.BoneWeights[k] = 0;
@@ -458,31 +407,18 @@ namespace MySFformat
                 }
 
             foreach (FLVER.Mesh m in b.Meshes)
-            foreach (FLVER.Vertex v in m.Vertices)
-                for (int i = 0; i < v.Positions.Count; i++)
-                    v.Positions[i] = new System.Numerics.Vector3(
-                        v.Positions[i].X + x,
-                        v.Positions[i].Y + y,
-                        v.Positions[i].Z + z
-                    );
+                foreach (FLVER.Vertex v in m.Vertices)
+                    for (int i = 0; i < v.Positions.Count; i++)
+                        v.Positions[i] = new Vector3(
+                            v.Positions[i].X + x,
+                            v.Positions[i].Y + y,
+                            v.Positions[i].Z + z
+                        );
             b.Write(openFileDialog1.FileName + "n");
             MessageBox.Show("Swap completed!", "Info");
         }
 
-        static ObjLoader.Loader.Data.Elements.FaceVertex[] getVertices(
-            ObjLoader.Loader.Data.Elements.Face f
-        )
-        {
-            ObjLoader.Loader.Data.Elements.FaceVertex[] ans =
-                new ObjLoader.Loader.Data.Elements.FaceVertex[f.Count];
-            for (int i = 0; i < f.Count; i++)
-            {
-                ans[i] = f[i];
-            }
-            return ans;
-        }
-
-        public static void exportJson(
+        public static void ExportJson(
             string content,
             string fileName = "export.json",
             string endMessage = ""
