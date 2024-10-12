@@ -376,14 +376,14 @@ namespace MySFformat
 
             currentY += 20;
 
-            CheckBox rotDg = new CheckBox
+            CheckBox rotateRadius = new CheckBox
             {
                 Size = new System.Drawing.Size(160, 15),
-                Text = "Rotate in degrees",
+                Text = "Rotate in radius",
                 Location = new System.Drawing.Point(10, currentY),
                 Checked = false
             };
-            p.Controls.Add(rotDg);
+            p.Controls.Add(rotateRadius);
 
             currentY += 20;
 
@@ -530,7 +530,7 @@ namespace MySFformat
                         float pitch = float.Parse(rotY.Text);
 
                         float yaw = float.Parse(rotZ.Text);
-                        if (rotDg.Checked)
+                        if (!rotateRadius.Checked)
                         {
                             roll = (float)(roll / 180f * Math.PI);
                             pitch = (float)(pitch / 180f * Math.PI);

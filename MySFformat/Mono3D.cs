@@ -68,7 +68,7 @@ namespace MySFformat
         public Mono3D()
         {
             Window.Title =
-                "FLVER Viewer, F: refresh, F1 F2 F3 F4 F5: Change render mode, Right click: check vertex info, B: Toggle bone display, M: Dummy display";
+                "FLVER Viewer, F: refresh, F1 F2 F3 F4 F5 F6: Change render mode, Right click: check vertex info, B: Toggle bone display, M: Dummy display";
             Window.AllowUserResizing = true;
             IsMouseVisible = true;
             graphics = new GraphicsDeviceManager(this);
