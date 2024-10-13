@@ -17,40 +17,29 @@ namespace MySFformat
     static partial class Program
     {
         public static FLVER targetFlver;
-        public static TPF targetTPF = null;
         public static string flverName;
-        public static List<DataGridViewTextBoxCell> boneNameList;
-        public static List<TextBox> parentList;
-        public static List<TextBox> childList;
-        public static List<VertexInfo> verticesInfo = new List<VertexInfo>();
-
-        public static Vector3D[] bonePosList = new Vector3D[1000];
-
-        public static Dictionary<string, string> boneParentList;
         public static List<FLVER.Vertex> vertices = new List<FLVER.Vertex>();
-        public static Mono3D mono;
+        public static List<VertexInfo> verticesInfo = new List<VertexInfo>();
+        public static Vector3D[] bonePosList = new Vector3D[1000];
+        public static Dictionary<string, string> boneParentList;
 
+        //3D view related
+        public static Mono3D mono;
         public static Vector3 checkingPoint;
         public static Vector3 checkingPointNormal;
         public static bool useCheckingPoint = false;
-
         public static int checkingMeshNum = 0;
         public static bool useCheckingMesh = false;
-
-        /***settings***/
-        public static bool loadTexture = true;
-        public static bool show3D = false;
-        public static int boneFindParentTimes = 15; //if cannot find bone, find if its parent bone matches flver bone name
-
         public static bool boneDisplay = true;
         public static bool dummyDisplay = true;
-
         public static bool setVertexPos = false;
         public static float setVertexX = 0;
         public static float setVertexY = 1.75f;
         public static float setVertexZ = 0;
 
-        public static RotationOrder rotOrder = RotationOrder.YZX;
+        /***settings***/
+        public static bool loadTexture = true;
+        public static bool show3D = false;
 
         public static string version = "2.0";
 
@@ -307,7 +296,7 @@ namespace MySFformat
                 {
                     boneTrans[i] = new Transform3D
                     {
-                        rotOrder = rotOrder,
+                        rotOrder = RotationOrder.YZX,
                         position = new Vector3D(targetFlver.Bones[i].Translation)
                     };
                     boneTrans[i].setRotationInRad(new Vector3D(targetFlver.Bones[i].Rotation));
@@ -507,7 +496,6 @@ namespace MySFformat
             }
             useCheckingMesh = false;
             mono.vertices = ans.ToArray();
-            // mono.triTextureVertices = textureTriangles.ToArray();
             mono.meshInfos = mis.ToArray();
             mono.triVertices = triangles.ToArray();
         }

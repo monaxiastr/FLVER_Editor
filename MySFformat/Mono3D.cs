@@ -308,21 +308,7 @@ namespace MySFformat
 
             try
             {
-                if (Program.targetTPF != null)
-                {
-                    foreach (var t in Program.targetTPF.Textures)
-                    {
-                        textureMap.Add(
-                            t.Name,
-                            getTextureFromBitmap(
-                                readDdsStreamToBitmap(new MemoryStream(t.Bytes)),
-                                GraphicsDevice
-                            )
-                        );
-                        //   System.Windows.MessageBox.Show("Added:" + t.Name);
-                    }
-                }
-                else if (File.Exists(tpfFile))
+                if (File.Exists(tpfFile))
                 {
                     var tpf = SoulsFormats.TPF.Read(tpfFile);
                     foreach (var t in tpf.Textures)

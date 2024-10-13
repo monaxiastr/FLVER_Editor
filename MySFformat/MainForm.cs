@@ -15,9 +15,7 @@ namespace MySFformat
                 Text = "FLVER Bones - " + flverName,
                 Size = new System.Drawing.Size(750, 700)
             };
-            boneNameList = new List<DataGridViewTextBoxCell>();
-            parentList = new List<TextBox>();
-            childList = new List<TextBox>();
+            List<DataGridViewTextBoxCell> boneNameList = new List<DataGridViewTextBoxCell>();
 
             var boneParentList = new List<DataGridViewTextBoxCell>();
             var boneChildList = new List<DataGridViewTextBoxCell>();

@@ -23,8 +23,6 @@ namespace MySFformat
                 AutoScroll = true,
                 Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70)
             };
-            parentList = new List<TextBox>();
-            childList = new List<TextBox>();
             f.Controls.Add(p);
 
             List<CheckBox> chosenList = new List<CheckBox>();
@@ -134,7 +132,7 @@ namespace MySFformat
                 currentY += 20;
             }
 
-            #region Chosen meshes operation
+            #region 对选中的mesh执行操作
             p.Controls.Add(new Label
             {
                 Text = "Chosen meshes operation---",

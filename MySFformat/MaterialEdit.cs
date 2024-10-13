@@ -14,83 +14,37 @@ namespace MySFformat
         {
             Form f = new Form
             {
-                Text = "Material"
+                Text = "Material",
+                Size = new System.Drawing.Size(400, 450)
             };
-            Panel p = new Panel();
-            int sizeY = 50;
-            int currentY = 10;
-            var boneNameList = new List<TextBox>();
-            parentList = new List<TextBox>();
-            childList = new List<TextBox>();
-            p.AutoScroll = true;
+            Panel p = new Panel
+            {
+                AutoScroll = true,
+                Location = new System.Drawing.Point(f.Size.Width - 100, 0),
+                Size = new System.Drawing.Size(100, f.Size.Height)
+            };
             f.Controls.Add(p);
 
-            p.Controls.Add(new Label
+            ListView lv = new ListView
             {
-                Text = "index",
-                Size = new System.Drawing.Size(50, 15),
-                Location = new System.Drawing.Point(10, currentY + 5)
-            });
-            p.Controls.Add(new Label
+                View = View.Details,
+                FullRowSelect = true,
+                HeaderStyle = ColumnHeaderStyle.Nonclickable,
+                Size = new System.Drawing.Size(300, 400),
+                Location = new System.Drawing.Point(10, 10),
+                MultiSelect = false
+            };
+            lv.Columns.Add("name", 250, HorizontalAlignment.Left);
+            //lv.Columns.Add("type", 200, HorizontalAlignment.Left);
+            foreach (var material in targetFlver.Materials)
+                lv.Items.Add(new ListViewItem(new string[] { material.Name }));
+                //lv.Items.Add(new ListViewItem(new string[] { material.Name, material.Flags + ",GX" + material.GXBytes + ",Unk" + material.Unk18 }));
+            lv.MouseDoubleClick += (s, e) =>
             {
-                Text = "name",
-                Size = new System.Drawing.Size(150, 15),
-                Location = new System.Drawing.Point(70, currentY + 5)
-            });
-            p.Controls.Add(new Label
-            {
-                Text = "type",
-                Size = new System.Drawing.Size(150, 15),
-                Location = new System.Drawing.Point(270, currentY + 5)
-            });
-            p.Controls.Add(new Label
-            {
-                Text = "texture path",
-                Size = new System.Drawing.Size(150, 15),
-                Location = new System.Drawing.Point(340, currentY + 5)
-            });
-            currentY += 20;
-
-            for (int i = 0; i < targetFlver.Materials.Count; i++)
-            {
-                FLVER.Material bn = targetFlver.Materials[i];
-
-                p.Controls.Add(new TextBox
-                {
-                    Size = new System.Drawing.Size(200, 15),
-                    Location = new System.Drawing.Point(70, currentY),
-                    Text = bn.Name
-                });
-                p.Controls.Add(new Label
-                {
-                    Text = "[" + i + "]",
-                    Size = new System.Drawing.Size(50, 15),
-                    Location = new System.Drawing.Point(10, currentY + 5)
-                });
-                p.Controls.Add(new TextBox
-                {
-                    Size = new System.Drawing.Size(70, 15),
-                    Location = new System.Drawing.Point(270, currentY),
-                    Text = bn.Flags + ",GX" + bn.GXBytes + ",Unk" + bn.Unk18
-                });
-
-                Button buttonCheck = new Button();
-                int btnI = i;
-                buttonCheck.Text = "Edit";
-                ButtonTips("快速编辑此材质的贴图路径以及基础信息。", buttonCheck);
-                buttonCheck.Size = new System.Drawing.Size(70, 20);
-                buttonCheck.Location = new System.Drawing.Point(350, currentY);
-
-                buttonCheck.Click += (s, e) =>
-                {
-                    MaterialQuickEdit(targetFlver.Materials[btnI]);
-                };
-
-                p.Controls.Add(buttonCheck);
-
-                currentY += 20;
-                sizeY += 20;
-            }
+                if (lv.SelectedItems.Count > 0)
+                    MaterialQuickEdit(targetFlver.Materials[lv.SelectedItems[0].Index]);
+            };
+            f.Controls.Add(lv);
 
             var serializer = new JavaScriptSerializer();
             string serializedResult = serializer.Serialize(targetFlver.Materials);
@@ -99,8 +53,8 @@ namespace MySFformat
 
             Button button = new Button();
             ButtonTips("保存对材质的修改至Flver文件中。", button);
-            button.Text = "Modify";
-            button.Location = new System.Drawing.Point(650, btnY);
+            button.Text = "保存修改";
+            button.Location = new System.Drawing.Point(10, btnY);
             button.Click += (s, e) =>
             {
                 AutoBackUp();
@@ -111,8 +65,8 @@ namespace MySFformat
 
             Button button3 = new Button();
             ButtonTips("导入外部的Json文本并保存至Flver文件中。", button3);
-            button3.Text = "LoadJson";
-            button3.Location = new System.Drawing.Point(650, btnY);
+            button3.Text = "导入Json";
+            button3.Location = new System.Drawing.Point(10, btnY);
             button3.Click += (s, e) =>
             {
                 var openFileDialog1 = new OpenFileDialog();
@@ -141,12 +95,12 @@ namespace MySFformat
                     }
                 }
             };
-            Button button3ex = new Button();
             btnY += 50;
 
-            button3ex.Text = "ExportJson";
+            Button button3ex = new Button();
             ButtonTips("导出当前材质信息到一个json文件内。", button3ex);
-            button3ex.Location = new System.Drawing.Point(650, btnY);
+            button3ex.Text = "导出Json";
+            button3ex.Location = new System.Drawing.Point(10, btnY);
             button3ex.Click += (s, e) =>
             {
                 ExportJson(
@@ -160,7 +114,7 @@ namespace MySFformat
             Button buttonA = new Button
             {
                 Text = "M[A]_e",
-                Location = new System.Drawing.Point(650, btnY)
+                Location = new System.Drawing.Point(10, btnY)
             };
             ButtonTips("替换所有的材质(mtd)为M[A]_e材质。", buttonA);
             buttonA.Click += (s, e) =>
@@ -185,7 +139,7 @@ namespace MySFformat
             Button tpfXmlEdit = new Button();
             ButtonTips("自动编辑.tpf贴图文件用WitchyBND解包出来的xml文件。", tpfXmlEdit);
             tpfXmlEdit.Text = "Xml Edit";
-            tpfXmlEdit.Location = new System.Drawing.Point(650, btnY);
+            tpfXmlEdit.Location = new System.Drawing.Point(10, btnY);
             tpfXmlEdit.Click += (s, e) =>
             {
                 XmlEdit();
@@ -194,8 +148,8 @@ namespace MySFformat
 
             Button mtdConvert = new Button();
             ButtonTips("自动转换所有材质路径为你输入的值。", mtdConvert);
-            mtdConvert.Text = "M. Rename";
-            mtdConvert.Location = new System.Drawing.Point(650, btnY);
+            mtdConvert.Text = "M.Rename";
+            mtdConvert.Location = new System.Drawing.Point(10, btnY);
             mtdConvert.Click += (s, e) =>
             {
                 string res = "M[ARSN].mtd";
@@ -210,25 +164,18 @@ namespace MySFformat
             };
             btnY += 50;
 
-            f.Size = new System.Drawing.Size(750, 600);
-            p.Size = new System.Drawing.Size(600, 530);
             f.Resize += (s, e) =>
             {
-                p.Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70);
-                button.Location = new System.Drawing.Point(f.Size.Width - 100, 50);
-                button3.Location = new System.Drawing.Point(f.Size.Width - 100, 100);
-                button3ex.Location = new System.Drawing.Point(f.Size.Width - 100, 150);
-                buttonA.Location = new System.Drawing.Point(f.Size.Width - 100, 200);
-                tpfXmlEdit.Location = new System.Drawing.Point(f.Size.Width - 100, 250);
-                mtdConvert.Location = new System.Drawing.Point(f.Size.Width - 100, 300);
+                p.Location = new System.Drawing.Point(f.Size.Width - 100, 0);
+                p.Size = new System.Drawing.Size(100, f.Size.Height);
             };
 
-            f.Controls.Add(button);
-            f.Controls.Add(button3);
-            f.Controls.Add(button3ex);
-            f.Controls.Add(buttonA);
-            f.Controls.Add(tpfXmlEdit);
-            f.Controls.Add(mtdConvert);
+            p.Controls.Add(button);
+            p.Controls.Add(button3);
+            p.Controls.Add(button3ex);
+            p.Controls.Add(buttonA);
+            p.Controls.Add(tpfXmlEdit);
+            p.Controls.Add(mtdConvert);
             f.ShowDialog();
         }
 
@@ -238,7 +185,8 @@ namespace MySFformat
             openFileDialog1 = new OpenFileDialog
             {
                 InitialDirectory = Directory.GetCurrentDirectory(),
-                Title = "Choose .xml file depacked from .tpf file by Yabber"
+                Title = "Choose .xml file depacked from .tpf file by Yabber",
+                Filter = "XML files (*.xml)|*.xml"
             };
             string targetXml;
 
@@ -280,9 +228,16 @@ namespace MySFformat
         {
             Form f = new Form
             {
-                Text = "Material quick editor : <" + m.Name + ">"
+                Text = "Material quick editor : <" + m.Name + ">",
+                Size = new System.Drawing.Size(600, 600)
             };
-            Panel p = new Panel();
+            Panel p = new Panel
+            {
+                AutoScroll = true,
+                Size = new System.Drawing.Size(500, 580)
+            };
+            f.Controls.Add(p);
+
             List<TextBox> typeList = new List<TextBox>();
             List<TextBox> pathList = new List<TextBox>();
             int currentY = 10;
@@ -425,11 +380,6 @@ namespace MySFformat
                 currentY += 20;
             }
 
-            p.AutoScroll = true;
-            f.Controls.Add(p);
-
-            f.Size = new System.Drawing.Size(600, 600);
-            p.Size = new System.Drawing.Size(500, 580);
             f.Resize += (s, e) =>
             {
                 p.Size = new System.Drawing.Size(500, f.Size.Height - 70);

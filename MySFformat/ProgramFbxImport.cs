@@ -225,7 +225,7 @@ namespace MySFformat
                             //If cannot find a corresponding boneName in convertion.ini then
                             //if such bone can not be found in flver, then check its parent to see if it can be convert to its parent bone.
                             //check up to 5th grand parent.
-                            for (int bp = 0; boneIndex == -1 && bp < boneFindParentTimes; bp++)
+                            while (boneIndex == -1)
                                 if (boneParentList.ContainsValue(boneName) && boneParentList[boneName] != null)
                                 {
                                     boneName = boneParentList[boneName];
