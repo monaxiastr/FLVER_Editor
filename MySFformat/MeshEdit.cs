@@ -14,159 +14,101 @@ namespace MySFformat
         {
             Form f = new Form
             {
-                Text = "Mesh"
+                Text = "MeshEdit",
+                Size = new System.Drawing.Size(650, 600)
             };
-            Panel p = new Panel();
-            int sizeY = 50;
-            int currentY = 10;
-            var boneNameList = new List<TextBox>();
+
+            Panel p = new Panel
+            {
+                AutoScroll = true,
+                Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70)
+            };
             parentList = new List<TextBox>();
             childList = new List<TextBox>();
-            p.AutoScroll = true;
             f.Controls.Add(p);
 
-            List<CheckBox> cbList = new List<CheckBox>(); //List for deleting
-            List<TextBox> tbList = new List<TextBox>();
-            List<CheckBox> affectList = new List<CheckBox>();
+            List<CheckBox> chosenList = new List<CheckBox>();
 
-            p.Controls.Add(new Label
-            {
-                Text = "index",
-                Size = new System.Drawing.Size(50, 15),
-                Location = new System.Drawing.Point(10, currentY + 5)
-            });
             p.Controls.Add(new Label
             {
                 Text = "name",
                 Size = new System.Drawing.Size(150, 15),
-                Location = new System.Drawing.Point(70, currentY + 5)
+                Location = new System.Drawing.Point(15, 15)
             });
-            p.Controls.Add(new Label
+            Button buttonChooseAll = new Button
+            {//choose all
+                Text = "Choose All",
+                Size = new System.Drawing.Size(80, 20),
+                Location = new System.Drawing.Point(265, 10)
+            };
+            buttonChooseAll.Click += (s, e) =>
             {
-                Text = "Delete?",
-                Size = new System.Drawing.Size(50, 15),
-                Location = new System.Drawing.Point(270, currentY + 5)
-            });
-            p.Controls.Add(new Label
-            {
-                Text = "Chosen",
-                Size = new System.Drawing.Size(50, 15),
-                Location = new System.Drawing.Point(340, currentY + 5)
-            });
-            {
-                Button dA = new Button
-                {//delete all
-                    Text = "A",
-                    Size = new System.Drawing.Size(15, 15),
-                    Location = new System.Drawing.Point(320, currentY + 5)
-                };
-                dA.Click += (s, e) =>
-                {
-                    bool allSelected = true;
-                    foreach (var item in cbList)
-                        if (item.Checked == false)
-                            allSelected = false;
-                    foreach (var item in cbList)
-                        item.Checked = !allSelected;
-                };
-                ButtonTips("全选/全不选", dA);
-                p.Controls.Add(dA);
-            }
-            {
-                Button dA = new Button
-                {//choose all
-                    Text = "A",
-                    Size = new System.Drawing.Size(15, 15),
-                    Location = new System.Drawing.Point(390, currentY + 5)
-                };
-                dA.Click += (s, e) =>
-                {
-                    bool allSelected = true;
-                    foreach (var item in affectList)
-                        if (item.Checked == false)
-                            allSelected = false;
-                    foreach (var item in affectList)
-                        item.Checked = !allSelected;
-                };
-                ButtonTips("全选/全不选", dA);
-                p.Controls.Add(dA);
-            }
-            {
-                Button dA = new Button
-                {
-                    Text = "TBF All",
-                    Size = new System.Drawing.Size(70, 20),
-                    Location = new System.Drawing.Point(500, currentY)
-                };
-                dA.Click += (s, e) =>
-                {
-                    for (int i = 0; i < affectList.Count; i++)
-                    {
-                        if (affectList[i].Checked == false)
-                        {
-                            continue;
-                        }
-                        foreach (var fs in targetFlver.Meshes[i].FaceSets)
-                            fs.CullBackfaces = !fs.CullBackfaces;
-                    }
-                    AutoBackUp();
-                    targetFlver.Write(flverName);
-                    MessageBox.Show("Finished toggling all back face rendering!", "Info");
-                };
-                ButtonTips("开关选择的双面渲染", dA);
-                p.Controls.Add(dA);
-            }
+                bool allSelected = true;
+                foreach (var item in chosenList)
+                    if (item.Checked == false)
+                        allSelected = false;
+                foreach (var item in chosenList)
+                    item.Checked = !allSelected;
+            };
+            ButtonTips("全选/全不选", buttonChooseAll);
+            p.Controls.Add(buttonChooseAll);
 
-            currentY += 20;
-
+            int currentY = 30;
+            //每一个mesh的属性与操作
             for (int i = 0; i < targetFlver.Meshes.Count; i++)
             {
                 FLVER.Mesh bn = targetFlver.Meshes[i];
-
                 TextBox t = new TextBox
                 {
-                    Size = new System.Drawing.Size(200, 15),
-                    Location = new System.Drawing.Point(70, currentY),
+                    Size = new System.Drawing.Size(250, 15),
+                    Location = new System.Drawing.Point(15, currentY),
                     ReadOnly = true,
                     Text = "[M:" + targetFlver.Materials[bn.MaterialIndex].Name + "],Unk1:" + bn.Unk1 + ",Dyna:" + bn.Dynamic
                 };
                 p.Controls.Add(t);
 
-                p.Controls.Add(new Label
-                {
-                    Text = "[" + i + "]",
-                    Size = new System.Drawing.Size(50, 15),
-                    Location = new System.Drawing.Point(10, currentY + 5)
-                });
-
-                CheckBox cb = new CheckBox
-                {//delete
-                    Checked = false,
-                    Size = new System.Drawing.Size(15, 15),
-                    Location = new System.Drawing.Point(320, currentY)
-                };
-                p.Controls.Add(cb);
-                cbList.Add(cb);
-
-                CheckBox cb2 = new CheckBox
+                CheckBox checkBox = new CheckBox
                 {//choose
                     Checked = true,
                     Size = new System.Drawing.Size(15, 15),
-                    Location = new System.Drawing.Point(390, currentY)
+                    Location = new System.Drawing.Point(300, currentY)
                 };
-                p.Controls.Add(cb2);
-                affectList.Add(cb2);
-                Button buttonCheck = new Button();
-                int btnI = i;
-                buttonCheck.Text = "Check";
-                buttonCheck.Size = new System.Drawing.Size(70, 20);
-                buttonCheck.Location = new System.Drawing.Point(420, currentY);
+                p.Controls.Add(checkBox);
+                chosenList.Add(checkBox);
 
+                int btnIndex = i;
+                Button buttonDelete = new Button
+                {
+                    Text = "Delete",
+                    Size = new System.Drawing.Size(70, 20),
+                    Location = new System.Drawing.Point(350, currentY)
+                };
+                buttonDelete.Click += (s, e) =>
+                {
+                    foreach (FLVER.Vertex v in targetFlver.Meshes[btnIndex].Vertices)
+                    {
+                        for (int j = 0; j < v.Positions.Count; j++)
+                            v.Positions[j] = new Vector3(0, 0, 0);
+                        for (int j = 0; j < v.BoneWeights.Length; j++)
+                            v.BoneWeights[j] = 0;
+                    }
+                    foreach (var mf in targetFlver.Meshes[btnIndex].FaceSets)
+                        mf.Vertices = new uint[0];
+                    UpdateVertices();
+                };
+                p.Controls.Add(buttonDelete);
+
+                Button buttonCheck = new Button
+                {
+                    Text = "Check",
+                    Size = new System.Drawing.Size(70, 20),
+                    Location = new System.Drawing.Point(420, currentY)
+                };
                 buttonCheck.Click += (s, e) =>
                 {
                     useCheckingMesh = true;
-                    checkingMeshNum = btnI;
-                    FLVER.Mesh mes = targetFlver.Meshes[btnI];
+                    checkingMeshNum = btnIndex;
+                    FLVER.Mesh mes = targetFlver.Meshes[btnIndex];
                     JavaScriptSerializer jse = new JavaScriptSerializer();
 
                     FLVER.Mesh m2 = new FLVER.Mesh
@@ -184,38 +126,15 @@ namespace MySFformat
                         BoneIndices = mes.BoneIndices
                     };
                     foreach (FLVER.FaceSet fs in m2.FaceSets)
-                    {
                         fs.Vertices = null;
-                    }
                     UpdateVertices();
                 };
 
                 p.Controls.Add(buttonCheck);
-
-                Button buttonTBF = new Button
-                {
-                    Text = "TBF",
-                    Size = new System.Drawing.Size(70, 20),
-                    Location = new System.Drawing.Point(500, currentY)
-                };
-                buttonTBF.Click += (s, e) =>
-                {
-                    FLVER.Mesh mes = targetFlver.Meshes[btnI];
-                    foreach (var vfs in mes.FaceSets)
-                    {
-                        vfs.CullBackfaces = !vfs.CullBackfaces;
-                    }
-                    UpdateVertices();
-                    AutoBackUp();
-                    targetFlver.Write(flverName);
-                    MessageBox.Show("Finished toggling back face rendering!", "Info");
-                };
-                ButtonTips("Toggle back face rendering or not", buttonTBF);
-                p.Controls.Add(buttonTBF);
                 currentY += 20;
-                sizeY += 20;
             }
 
+            #region Chosen meshes operation
             p.Controls.Add(new Label
             {
                 Text = "Chosen meshes operation---",
@@ -328,52 +247,6 @@ namespace MySFformat
             };
             p.Controls.Add(scaleZ);
 
-            Button buttonN = new Button
-            {
-                Text = "N. Flip",
-                Size = new System.Drawing.Size(70, 20),
-                Location = new System.Drawing.Point(280, currentY)
-            };
-            ButtonTips("按你输入的数值调整法线数值。", buttonN);
-            buttonN.Click += (s, e) =>
-            {
-                for (int i = 0; i < cbList.Count; i++)
-                {
-                    if (affectList[i].Checked == false)
-                        continue;
-                    float x = float.Parse(scaleX.Text);
-                    float y = float.Parse(scaleY.Text);
-                    float z = float.Parse(scaleZ.Text);
-                    foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
-                    {
-                        for (int j = 0; j < v.Positions.Count; j++)
-                        {
-                            int xs = 1;
-                            int ys = 1;
-                            int zs = 1;
-
-                            //1.62: fixed scaling don't change normal error.
-                            if (x < 0)
-                                xs = -1;
-                            if (y < 0)
-                                ys = -1;
-                            if (z < 0)
-                                zs = -1;
-                            v.Normals[j] = new Vector4(
-                                v.Normals[j].X * xs,
-                                v.Normals[j].Y * ys,
-                                v.Normals[j].Z * zs,
-                                v.Normals[j].W
-                            );
-                        }
-                    }
-                }
-                MessageBox.Show("Normal flip completed.");
-                AutoBackUp();
-                targetFlver.Write(flverName);
-            };
-            p.Controls.Add(buttonN);
-
             currentY += 20;
 
             CheckBox rotateRadius = new CheckBox
@@ -385,130 +258,20 @@ namespace MySFformat
             };
             p.Controls.Add(rotateRadius);
 
-            currentY += 20;
-
-            CheckBox dummyCb = new CheckBox
-            {
-                Size = new System.Drawing.Size(160, 15),
-                Text = "Affect dummy",
-                Location = new System.Drawing.Point(10, currentY),
-                Checked = false
-            };
-            p.Controls.Add(dummyCb);
-
-            currentY += 20;
-
-            CheckBox bonesCb = new CheckBox
-            {
-                Size = new System.Drawing.Size(160, 15),
-                Text = "Affect bones",
-                Location = new System.Drawing.Point(10, currentY),
-                Checked = false
-            };
-            p.Controls.Add(bonesCb);
-
-            currentY += 20;
-
-            CheckBox facesetCb = new CheckBox
-            {
-                Size = new System.Drawing.Size(160, 15),
-                Text = "Delete faceset only",
-                Location = new System.Drawing.Point(10, currentY),
-                Checked = false
-            };
-            p.Controls.Add(facesetCb);
-
-            currentY += 20;
-
-            CheckBox scaleBoneWeight = new CheckBox
-            {
-                Size = new System.Drawing.Size(200, 15),
-                Text = "Convert bone weight index:",
-                Location = new System.Drawing.Point(10, currentY),
-                Checked = false
-            };
-            p.Controls.Add(scaleBoneWeight);
-
-            TextBox boneF = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(210, currentY),
-                Text = "0"
-            };
-            p.Controls.Add(boneF);
-
-            TextBox boneT = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(270, currentY),
-                Text = "0"
-            };
-            p.Controls.Add(boneT);
-
-            currentY += 20;
+            #endregion
 
             Button button = new Button
             {
-                Text = "Modify",
-                Location = new System.Drawing.Point(650, 50)
+                Text = "修改",
+                Location = new System.Drawing.Point(f.Size.Width - 100, 50)
             };
             ButtonTips("修改面片并保存至Flver文件中。", button);
             button.Click += (s, e) =>
             {
-                for (int i = 0; i < cbList.Count; i++)
+                for (int i = 0; i < chosenList.Count; i++)
                 {
-                    if (affectList[i].Checked == false)
+                    if (chosenList[i].Checked == false)
                         continue;
-                    if (cbList[i].Checked == true)
-                    {
-                        //if only delete facesets.... but keep vertices.
-                        //trick used in some physics case.
-                        if (facesetCb.Checked)
-                            foreach (var mf in targetFlver.Meshes[i].FaceSets)
-                                for (uint facei = 0; facei < mf.Vertices.Length; facei++)
-                                    mf.Vertices[facei] = 1;
-                        else
-                        {
-                            foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
-                                for (int j = 0; j < v.Positions.Count; j++)
-                                {
-                                    v.Positions[j] = new Vector3(0, 0, 0);
-                                    if (v.BoneWeights == null)
-                                        continue;
-                                    for (int k = 0; k < v.BoneWeights.Length; k++)
-                                        v.BoneWeights[k] = 0;
-                                }
-                            foreach (var mf in targetFlver.Meshes[i].FaceSets)
-                                mf.Vertices = new uint[0] { };
-                        }
-                    }
-                    int i2 = int.Parse(tbList[i].Text);
-                    if (i2 >= 0)
-                    {
-                        foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
-                        {
-                            if (v.Positions == null)
-                            {
-                                v.Positions = new List<Vector3>();
-                            }
-                            for (int j = 0; j < v.Positions.Count; j++)
-                            {
-                                if (v.BoneWeights == null)
-                                {
-                                    v.BoneWeights = new float[4];
-                                    v.BoneIndices = new int[4];
-                                }
-                                //v.Positions[j] = new System.Numerics.Vector3(0, 0, 0);
-                                for (int k = 0; k < v.BoneWeights.Length; k++)
-                                    v.BoneWeights[k] = 0;
-                                v.BoneIndices[0] = i2;
-                                v.BoneWeights[0] = 1;
-                            }
-                        }
-                        if (!targetFlver.Meshes[i].BoneIndices.Contains(i2))
-                            targetFlver.Meshes[i].BoneIndices.Add(i2);
-                        targetFlver.Meshes[i].Dynamic = true;
-                    }
 
                     if (transCb.Checked)
                     {
@@ -554,7 +317,6 @@ namespace MySFformat
                         float y = float.Parse(scaleY.Text);
                         float z = float.Parse(scaleZ.Text);
                         foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
-                        {
                             for (int j = 0; j < v.Positions.Count; j++)
                             {
                                 v.Positions[j] = new Vector3(
@@ -562,23 +324,9 @@ namespace MySFformat
                                     v.Positions[j].Y * y,
                                     v.Positions[j].Z * z
                                 );
-                                int xs = 1;
-                                int ys = 1;
-                                int zs = 1;
-
-                                //1.62: fixed scaling don't change normal error.
-                                if (x < 0)
-                                {
-                                    xs = -1;
-                                }
-                                if (y < 0)
-                                {
-                                    ys = -1;
-                                }
-                                if (z < 0)
-                                {
-                                    zs = -1;
-                                }
+                                int xs = x >= 0 ? 1 : -1;
+                                int ys = y >= 0 ? 1 : -1;
+                                int zs = z >= 0 ? 1 : -1;
                                 v.Normals[j] = new Vector4(
                                     v.Normals[j].X * xs,
                                     v.Normals[j].Y * ys,
@@ -592,71 +340,6 @@ namespace MySFformat
                                     v.Tangents[j].W
                                 );
                             }
-                        }
-                    }
-
-                    if (scaleBoneWeight.Checked == true)
-                    {
-                        int fromBone = int.Parse(boneF.Text);
-                        int toBone = int.Parse(boneT.Text);
-
-                        foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
-                            for (int j = 0; j < v.Positions.Count; j++)
-                                if (v.BoneIndices != null)
-                                    for (int k = 0; k < v.BoneIndices.Length; k++)
-                                        if (v.BoneIndices[k] == fromBone)
-                                            v.BoneIndices[k] = toBone;
-                    }
-                }
-                if (dummyCb.Checked)
-                {
-                    foreach (FLVER.Dummy d in targetFlver.Dummies)
-                    {
-                        if (transCb.Checked)
-                        {
-                            float x = float.Parse(transX.Text);
-                            float y = float.Parse(transY.Text);
-                            float z = float.Parse(transZ.Text);
-
-                            d.Position.X += x;
-                            d.Position.Y += y;
-                            d.Position.Z += z;
-                        }
-                        if (rotCb.Checked)
-                        {
-                            float roll = float.Parse(rotX.Text);
-                            float pitch = float.Parse(rotY.Text);
-                            float yaw = float.Parse(rotZ.Text);
-                            d.Position = RotatePoint(d.Position, pitch, roll, yaw);
-                        }
-                        if (scaleCb.Checked)
-                        {
-                            float x = float.Parse(scaleX.Text);
-                            float y = float.Parse(scaleY.Text);
-                            float z = float.Parse(scaleZ.Text);
-
-                            d.Position.X *= x;
-                            d.Position.Y *= y;
-                            d.Position.Z *= z;
-                        }
-                    }
-                }
-
-                //if affect bones were checked
-                if (bonesCb.Checked)
-                {
-                    float x = float.Parse(scaleX.Text);
-                    float y = float.Parse(scaleY.Text);
-                    float z = float.Parse(scaleZ.Text);
-                    //1.67: update affect bone functionality
-                    foreach (FLVER.Bone bs in targetFlver.Bones)
-                    {
-                        if (true)
-                        {
-                            bs.Translation.X = x * bs.Translation.X;
-                            bs.Translation.Y = y * bs.Translation.Y;
-                            bs.Translation.Z = z * bs.Translation.Z;
-                        }
                     }
                 }
                 AutoBackUp();
@@ -667,16 +350,16 @@ namespace MySFformat
 
             Button button2 = new Button();
             ButtonTips("把另一个Flver文件合并到当前的Flver文件内。", button2);
-            button2.Text = "Attach";
-            button2.Location = new System.Drawing.Point(650, 100);
+            button2.Text = "合并Flver";
+            button2.Location = new System.Drawing.Point(f.Size.Width - 100, 100);
             button2.Click += (s, e) =>
             {
                 var openFileDialog1 = new OpenFileDialog
                 {
-                    Title = "Choose the flver file you want to attach to the scene"
+                    Title = "选择需要合并的Flver文件",
+                    Filter = "Flver files (*.flver)|*.flver",
                 };
                 if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                {
                     try
                     {
                         FLVER sekiro = FLVER.Read(openFileDialog1.FileName);
@@ -706,9 +389,7 @@ namespace MySFformat
                             foreach (FLVER.Vertex v in m.Vertices)
                             {
                                 if (v.BoneIndices == null)
-                                {
                                     continue;
-                                }
                                 for (int i5 = 0; i5 < v.BoneIndices.Length; i5++)
                                     if (sekiroToTarget.ContainsKey(v.BoneIndices[i5]))
                                         v.BoneIndices[i5] = sekiroToTarget[v.BoneIndices[i5]];
@@ -724,39 +405,28 @@ namespace MySFformat
                         targetFlver.Materials = targetFlver
                             .Materials.Concat(sekiro.Materials)
                             .ToList();
-                        //sekiro.Meshes[0].MaterialIndex
-
-                        //targetFlver.Materials =  new JavaScriptSerializer().Deserialize<List<FLVER.Material>>(res);
                         AutoBackUp();
                         targetFlver.Write(flverName);
-                        MessageBox.Show(
-                            "Attaching new flver file completed! Please exit the program!",
-                            "Info"
-                        );
+                        MessageBox.Show("Attaching new flver file completed!", "Info");
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(
-                            $"Security error.\n\nError message: {ex.Message}\n\n"
-                                + $"Details:\n\n{ex.StackTrace}"
-                        );
+                        MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\nDetails:\n\n{ex.StackTrace}");
                     }
-                }
             };
 
             Button buttonFlip = new Button();
             ButtonTips("翻转模型的YZ轴，有些外部模型需要这么做。", buttonFlip);
-            buttonFlip.Text = "Switch YZ";
-            buttonFlip.Location = new System.Drawing.Point(650, 150);
+            buttonFlip.Text = "翻转YZ";
+            buttonFlip.Location = new System.Drawing.Point(f.Size.Width - 100, 150);
             buttonFlip.Click += (s, e) =>
             {
-                for (int i = 0; i < cbList.Count; i++)
+                for (int i = 0; i < chosenList.Count; i++)
                 {
-                    if (affectList[i].Checked == false)
+                    if (chosenList[i].Checked == false)
                         continue;
                     float roll = (float)(Math.PI * -0.5f); //X
                     float pitch = (float)(Math.PI); //Y
-
                     float yaw = 0;
                     foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
                     {
@@ -768,9 +438,7 @@ namespace MySFformat
                             v.Tangents[j2] = RotatePoint(v.Tangents[j2], pitch, roll, yaw);
                     }
                 }
-
                 UpdateVertices();
-
                 AutoBackUp();
                 targetFlver.Write(flverName);
                 MessageBox.Show("YZ axis switched!", "Info");
@@ -778,18 +446,15 @@ namespace MySFformat
 
             Button reverseFaceset = new Button();
             ButtonTips("模型翻面。有些特殊情况需要这么做。", reverseFaceset);
-            reverseFaceset.Text = "Rev. Mesh";
-            reverseFaceset.Location = new System.Drawing.Point(650, 200);
+            reverseFaceset.Text = "模型翻面";
+            reverseFaceset.Location = new System.Drawing.Point(f.Size.Width - 100, 200);
             reverseFaceset.Click += (s, e) =>
             {
-                for (int i = 0; i < cbList.Count; i++)
-                {
-                    if (affectList[i].Checked == false)
-                        continue;
-                    foreach (FLVER.FaceSet fs in targetFlver.Meshes[i].FaceSets)
-                        for (int ifs = 0; ifs < fs.Vertices.Length; ifs += 3)
-                            (fs.Vertices[ifs + 2], fs.Vertices[ifs + 1]) = (fs.Vertices[ifs + 1], fs.Vertices[ifs + 2]);
-                }
+                for (int i = 0; i < chosenList.Count; i++)
+                    if (chosenList[i].Checked == true)
+                        foreach (FLVER.FaceSet fs in targetFlver.Meshes[i].FaceSets)
+                            for (int ifs = 0; ifs < fs.Vertices.Length; ifs += 3)
+                                (fs.Vertices[ifs + 2], fs.Vertices[ifs + 1]) = (fs.Vertices[ifs + 1], fs.Vertices[ifs + 2]);
                 UpdateVertices();
                 AutoBackUp();
                 targetFlver.Write(flverName);
@@ -798,13 +463,13 @@ namespace MySFformat
 
             Button reverseNormal = new Button();
             ButtonTips("反向模型法线&切线。有些特殊情况需要这么做。", reverseNormal);
-            reverseNormal.Text = "Rev. Norm.";
-            reverseNormal.Location = new System.Drawing.Point(650, 250);
+            reverseNormal.Text = "反向法切";
+            reverseNormal.Location = new System.Drawing.Point(f.Size.Width - 100, 250);
             reverseNormal.Click += (s, e) =>
             {
-                for (int i = 0; i < cbList.Count; i++)
+                for (int i = 0; i < chosenList.Count; i++)
                 {
-                    if (affectList[i].Checked == false)
+                    if (chosenList[i].Checked == false)
                         continue;
                     foreach (FLVER.Vertex v in targetFlver.Meshes[i].Vertices)
                     {
@@ -824,9 +489,7 @@ namespace MySFformat
                             );
                     }
                 }
-
                 UpdateVertices();
-
                 AutoBackUp();
                 targetFlver.Write(flverName);
                 MessageBox.Show("Normals reversed!", "Info");
@@ -834,21 +497,34 @@ namespace MySFformat
 
             Button meshReset = new Button();
             ButtonTips("部分重置面片信息，主要用于导入DS2flver文件至DS3之中。", meshReset);
-            meshReset.Text = "M. Reset";
-            meshReset.Location = new System.Drawing.Point(650, 300);
+            meshReset.Text = "重置面片";
+            meshReset.Location = new System.Drawing.Point(f.Size.Width - 100, 300);
             meshReset.Click += (s, e) =>
             {
                 SetMeshInfoToDefault();
-
                 UpdateVertices();
-
                 AutoBackUp();
                 targetFlver.Write(flverName);
                 MessageBox.Show("Meshs resetted!", "Info");
             };
 
-            f.Size = new System.Drawing.Size(750, 600);
-            p.Size = new System.Drawing.Size(600, 530);
+            Button buttonTBF = new Button
+            {
+                Text = "双面渲染",
+                Location = new System.Drawing.Point(f.Size.Width - 100, 350)
+            };
+            buttonTBF.Click += (s, e) =>
+            {
+                for (int i = 0; i < chosenList.Count; i++)
+                    if (chosenList[i].Checked == true)
+                        foreach (var fs in targetFlver.Meshes[i].FaceSets)
+                            fs.CullBackfaces = !fs.CullBackfaces;
+                AutoBackUp();
+                targetFlver.Write(flverName);
+                MessageBox.Show("成功开关双面渲染!", "Info");
+            };
+            ButtonTips("开关选择的双面渲染", buttonTBF);
+
             f.Resize += (s, e) =>
             {
                 p.Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70);
@@ -858,6 +534,7 @@ namespace MySFformat
                 reverseFaceset.Location = new System.Drawing.Point(f.Size.Width - 100, 200);
                 reverseNormal.Location = new System.Drawing.Point(f.Size.Width - 100, 250);
                 meshReset.Location = new System.Drawing.Point(f.Size.Width - 100, 300);
+                buttonTBF.Location = new System.Drawing.Point(f.Size.Width - 100, 350);
             };
 
             f.Controls.Add(button);
@@ -866,6 +543,7 @@ namespace MySFformat
             f.Controls.Add(reverseFaceset);
             f.Controls.Add(reverseNormal);
             f.Controls.Add(meshReset);
+            f.Controls.Add(buttonTBF);
 
             f.ShowDialog();
         }

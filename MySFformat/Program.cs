@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace MySFformat
@@ -63,7 +62,7 @@ namespace MySFformat
         {
             //加载配置
             string assemblyPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            IniParser settingFile = new IniParser(assemblyPath + "\\MySFformat.ini");
+            IniParser settingFile = new IniParser(assemblyPath + "\\settings.ini");
             show3D = settingFile.GetSetting("FLVER", "show3D").Trim() != "0";
 
             //读取文件
@@ -97,6 +96,41 @@ namespace MySFformat
 
             //显示窗口
             ShowMainForm();
+        }
+
+        static void AutoBackUp()
+        {
+            if (!File.Exists(flverName + ".bak"))
+                File.Copy(flverName, flverName + ".bak", false);
+        }
+
+        public static void ButtonTips(string tips, Button btn)
+        {
+            ToolTip toolTip = new ToolTip();
+            toolTip.SetToolTip(btn, tips);
+        }
+
+        /// <summary>
+        /// Find the file name without its path name and extension name.
+        /// </summary>
+        /// <param name="arg">Input.</param>
+        /// <returns></returns>
+        public static string FindFileName(string arg)
+        {
+            int startIndex = arg.LastIndexOf('/') > arg.LastIndexOf('\\') ? arg.LastIndexOf('/') : arg.LastIndexOf('\\');
+
+            int endIndex = arg.LastIndexOf('.');
+            if (startIndex < 0)
+                startIndex = 0;
+            if (endIndex >= 0)
+            {
+                string res = arg.Substring(startIndex, endIndex - startIndex);
+                if (res.ToCharArray()[0] == '\\' || res.ToCharArray()[0] == '/')
+                    res = res.Substring(1);
+                return res;
+            }
+
+            return arg;
         }
 
         public static void UpdateVertices()
@@ -477,300 +511,5 @@ namespace MySFformat
             mono.meshInfos = mis.ToArray();
             mono.triVertices = triangles.ToArray();
         }
-
-        static void AutoBackUp()
-        {
-            if (!File.Exists(flverName + ".bak"))
-                File.Copy(flverName, flverName + ".bak", false);
-        }
-
-        static void Dummies()
-        {
-            Form f = new Form
-            {
-                Text = "Dummies"
-            };
-            Panel p = new Panel();
-            int currentY2 = 10;
-            p.AutoScroll = true;
-            string assemblyPath = Path.GetDirectoryName(
-                System.Reflection.Assembly.GetExecutingAssembly().Location
-            );
-            string dummyStr = File.ReadAllText(assemblyPath + "\\dummyInfo.dll");
-            List<FLVER.Dummy> refDummy = new JavaScriptSerializer().Deserialize<List<FLVER.Dummy>>(
-                dummyStr
-            );
-
-
-            f.Controls.Add(p);
-            p.Controls.Add(new Label
-            {
-                Text = "Choose # to translate:",
-                Size = new System.Drawing.Size(150, 15),
-                Location = new System.Drawing.Point(10, currentY2 + 5)
-            });
-            currentY2 += 20;
-
-            TextBox t = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(10, currentY2 + 5),
-                Text = "-1"
-            };
-            p.Controls.Add(t);
-
-            TextBox tref = new TextBox
-            {
-                Size = new System.Drawing.Size(100, 15),
-                Location = new System.Drawing.Point(150, currentY2 + 5),
-                Text = "",
-                ReadOnly = true
-            };
-            p.Controls.Add(tref);
-
-            Button buttonCheck = new Button();
-            ButtonTips("按照你输入的序列数找到对应的辅助点，辅助点会以白色的X显示。",
-                buttonCheck
-            );
-            buttonCheck.Text = "Check";
-            buttonCheck.Location = new System.Drawing.Point(70, currentY2 + 5);
-            buttonCheck.Click += (s, e) =>
-            {
-                int i = int.Parse(t.Text);
-                if (i >= 0 && i < targetFlver.Dummies.Count)
-                {
-                    useCheckingPoint = true;
-                    checkingPoint = new Vector3(
-                        targetFlver.Dummies[i].Position.X,
-                        targetFlver.Dummies[i].Position.Y,
-                        targetFlver.Dummies[i].Position.Z
-                    );
-                    checkingPointNormal = new Vector3(
-                        targetFlver.Dummies[i].Forward.X * 0.2f,
-                        targetFlver.Dummies[i].Forward.Y * 0.2f,
-                        targetFlver.Dummies[i].Forward.Z * 0.2f
-                    );
-
-                    tref.Text = "RefID:" + targetFlver.Dummies[i].ReferenceID;
-                    UpdateVertices();
-                }
-                else
-                    MessageBox.Show("Invalid modification value!");
-            };
-            p.Controls.Add(buttonCheck);
-
-            currentY2 += 25;
-
-            Label ltip = new Label
-            {
-                Location = new System.Drawing.Point(10, currentY2 + 5),
-                Size = new System.Drawing.Size(200, 15),
-                Text = "Translate value (x,y,z):"
-            };
-            p.Controls.Add(ltip);
-
-            currentY2 += 20;
-
-            TextBox tX = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(10, currentY2 + 5),
-                Text = "0"
-            };
-            p.Controls.Add(tX);
-
-            TextBox tY = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(70, currentY2 + 5),
-                Text = "0"
-            };
-            p.Controls.Add(tY);
-
-            TextBox tZ = new TextBox
-            {
-                Size = new System.Drawing.Size(60, 15),
-                Location = new System.Drawing.Point(130, currentY2 + 5),
-                Text = "0"
-            };
-            p.Controls.Add(tZ);
-
-            currentY2 += 20;
-
-            var serializer = new JavaScriptSerializer();
-            string serializedResult = serializer.Serialize(targetFlver.Dummies);
-
-            Button button = new Button();
-            ButtonTips("移动你所选择的辅助点，然后保存移动后的信息至Flver文件内。", button);
-            button.Text = "Modify";
-            button.Location = new System.Drawing.Point(650, 50);
-            button.Click += (s, e) =>
-            {
-                int i = int.Parse(t.Text);
-                if (i >= 0 && i < targetFlver.Dummies.Count)
-                {
-                    targetFlver.Dummies[i].Position.X += float.Parse(tX.Text);
-                    targetFlver.Dummies[i].Position.Y += float.Parse(tY.Text);
-                    targetFlver.Dummies[i].Position.Z += float.Parse(tZ.Text);
-                    AutoBackUp();
-                    targetFlver.Write(flverName);
-                    UpdateVertices();
-                }
-                else
-                    MessageBox.Show("Invalid modification value!");
-            };
-
-            Button button3 = new Button();
-            ButtonTips(
-                "Import external json file's dummy information and save to the flver file.\n"
-                    + "读取外部json文本并存储至Flver文件中。",
-                button3
-            );
-            button3.Text = "LoadJson";
-            button3.Location = new System.Drawing.Point(650, 150);
-            button3.Click += (s, e) =>
-            {
-                var openFileDialog1 = new OpenFileDialog();
-                string res = "";
-                if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                {
-                    try
-                    {
-                        var sr = new StreamReader(openFileDialog1.FileName);
-                        res = sr.ReadToEnd();
-                        sr.Close();
-                        targetFlver.Dummies = serializer.Deserialize<List<FLVER.Dummy>>(res);
-                        AutoBackUp();
-                        targetFlver.Write(flverName);
-                        UpdateVertices();
-                        MessageBox.Show("Dummy change completed! Please exit the program!", "Info");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(
-                            $"Security error.\n\nError message: {ex.Message}\n\n"
-                                + $"Details:\n\n{ex.StackTrace}"
-                        );
-                    }
-                }
-            };
-
-            Button buttonFix = new Button();
-            ButtonTips("写入契丸的辅助点信息以解决武器在只狼内没有剑风以及无法雷闪的问题。",
-                buttonFix
-            );
-            buttonFix.Text = "SekiroFix";
-            buttonFix.Location = new System.Drawing.Point(650, 200);
-            buttonFix.Click += (s, e) =>
-            {
-                for (int i = 0; i < refDummy.Count; i++)
-                    for (int j = 0; j < targetFlver.Dummies.Count; j++)
-                    {
-                        if (targetFlver.Dummies[j].ReferenceID == refDummy[i].ReferenceID)
-                            break;
-                        else if (j == targetFlver.Dummies.Count - 1)
-                        {
-                            targetFlver.Dummies.Add(refDummy[i]);
-                            break;
-                        }
-                    }
-                AutoBackUp();
-                targetFlver.Write(flverName);
-
-                UpdateVertices();
-                MessageBox.Show("Dummy change fixed! Please exit the program!", "Info");
-            };
-
-            f.Size = new System.Drawing.Size(750, 600);
-            p.Size = new System.Drawing.Size(600, 530);
-            f.Resize += (s, e) =>
-            {
-                p.Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70);
-                button.Location = new System.Drawing.Point(f.Size.Width - 100, 50);
-                button3.Location = new System.Drawing.Point(f.Size.Width - 100, 150);
-                buttonFix.Location = new System.Drawing.Point(f.Size.Width - 100, 200);
-            };
-
-            f.Controls.Add(button);
-            f.Controls.Add(button3);
-            f.Controls.Add(buttonFix);
-            f.ShowDialog();
-        }
-
-        static int FindFLVER_Bone(FLVER f, string name)
-        {
-            for (int flveri = 0; flveri < f.Bones.Count; flveri++)
-                if (f.Bones[flveri].Name == name)
-                    return flveri;
-            return -1;
-        }
-
-
-        /// <summary>
-        /// Dummy Text
-        /// </summary>
-        /// <param name="newBones">The new bones list</param>
-        public static void BoneWeightShift(List<FLVER.Bone> newBones)
-        {
-            //Step 1 build a int table to map old bone index -> new bone index
-            int[] boneMapTable = new int[targetFlver.Bones.Count];
-            for (int i = 0; i < targetFlver.Bones.Count; i++)
-                boneMapTable[i] = FindNewBoneIndex(newBones, i);
-
-            //Step 2 according to the table, change all the vertices' bone weights
-            foreach (var v in vertices)
-                for (int i = 0; i < v.BoneIndices.Length; i++)
-                    v.BoneIndices[i] = boneMapTable[v.BoneIndices[i]];
-        }
-
-        //Find Bone index, if no such bone find its parent's index
-        public static int FindNewBoneIndex(List<FLVER.Bone> newBones, int oldBoneIndex)
-        {
-            while (oldBoneIndex >= 0)
-            {
-                string oldBoneName = targetFlver.Bones[oldBoneIndex].Name;
-                for (int i = 0; i < newBones.Count; i++)
-                    if (oldBoneName == newBones[i].Name)
-                        return i;
-                oldBoneIndex = targetFlver.Bones[oldBoneIndex].ParentIndex;
-            }
-            return 0;
-        }
-
-        public static void ButtonTips(string tips, Button btn)
-        {
-            ToolTip toolTip = new ToolTip();
-            toolTip.SetToolTip(btn, tips);
-        }
-
-        /// <summary>
-        /// Find the file name without its path name and extension name.
-        /// </summary>
-        /// <param name="arg">Input.</param>
-        /// <returns></returns>
-        public static string FindFileName(string arg)
-        {
-            int startIndex = arg.LastIndexOf('/');
-
-            int altStartIndex = arg.LastIndexOf('\\');
-
-            if (altStartIndex > startIndex)
-                startIndex = altStartIndex;
-
-            int endIndex = arg.LastIndexOf('.');
-            if (startIndex < 0)
-                startIndex = 0;
-            if (endIndex >= 0)
-            {
-                string res = arg.Substring(startIndex, endIndex - startIndex);
-                if ((res.ToCharArray())[0] == '\\' || (res.ToCharArray())[0] == '/')
-                    res = res.Substring(1);
-                return res;
-            }
-
-            return arg;
-        }
-
-
     }
 }

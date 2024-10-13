@@ -109,6 +109,7 @@
     <Compile Include="MainForm.cs" />
     <Compile Include="Matrix3D.cs" />
     <Compile Include="MaterialEdit.cs" />
+    <Compile Include="DummyEdit.cs" />
     <Compile Include="MeshEdit.cs" />
     <Compile Include="Mono3D.cs" />
     <Compile Include="Program.cs" />
@@ -130,7 +131,7 @@
     <None Include="boneConvertion.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="MySFformat.ini">
+    <None Include="settings.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -148,9 +149,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="dummyInfo.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="icon_lSi_icon.ico" />
     <Content Include="oo2core_6_win64.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

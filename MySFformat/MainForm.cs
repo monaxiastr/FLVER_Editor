@@ -13,12 +13,8 @@ namespace MySFformat
             {
                 Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath),
                 Text = "FLVER Bones - " + flverName,
+                Size = new System.Drawing.Size(750, 700)
             };
-            Panel p = new Panel();
-            p.AutoScroll = true;
-            f.Controls.Add(p);
-
-            int currentY = 10;
             boneNameList = new List<DataGridViewTextBoxCell>();
             parentList = new List<TextBox>();
             childList = new List<TextBox>();
@@ -26,203 +22,195 @@ namespace MySFformat
             var boneParentList = new List<DataGridViewTextBoxCell>();
             var boneChildList = new List<DataGridViewTextBoxCell>();
 
-            DataGridView dg = new DataGridView();
-            var bindingList = new System.ComponentModel.BindingList<FLVER.Bone>(targetFlver.Bones);
-
-            dg.Columns.Add("Index", "Index");
-            dg.Columns[0].Width = 50;
-            dg.Columns.Add("Name", "Name");
-            dg.Columns.Add("ParentID", "ParentID");
-            dg.Columns[2].Width = 70;
-            dg.Columns.Add("ChildID", "ChildID");
-            dg.Columns[3].Width = 70;
-            dg.Columns.Add("Position", "Position");
-            dg.Columns.Add("Scale", "Scale");
-            dg.Columns.Add("Rotation", "Rotation");
-
-            foreach (DataGridViewColumn column in dg.Columns)
+            DataGridView dataGridView = new DataGridView
             {
+                Location = new System.Drawing.Point(10, 10),
+                Size = new System.Drawing.Size(600, 600),
+                RowHeadersVisible = false,
+            };
+
+            dataGridView.Columns.Add("Index", "Index");
+            dataGridView.Columns.Add("Name", "Name");
+            dataGridView.Columns.Add("ParentID", "ParentID");
+            dataGridView.Columns.Add("ChildID", "ChildID");
+            dataGridView.Columns.Add("Position", "Position");
+            dataGridView.Columns.Add("Scale", "Scale");
+            dataGridView.Columns.Add("Rotation", "Rotation");
+            dataGridView.Columns[0].Width = 50;
+            dataGridView.Columns[2].Width = 65;
+            dataGridView.Columns[3].Width = 65;
+
+            foreach (DataGridViewColumn column in dataGridView.Columns)
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-            dg.Location = new System.Drawing.Point(10, 10);
-            dg.Size = new System.Drawing.Size(380, 450);
-            dg.RowHeadersVisible = false;
 
             for (int i = 0; i < targetFlver.Bones.Count; i++)
             {
                 FLVER.Bone bn = targetFlver.Bones[i];
 
                 DataGridViewRow row = new DataGridViewRow();
+                DataGridViewTextBoxCell indexCell = new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value = "[" + i + "]"
-                    };
+                    Value = "[" + i + "]"
+                };
+                row.Cells.Add(indexCell);
+                indexCell.ReadOnly = true;
 
-                    row.Cells.Add(textboxcell);
-                    textboxcell.ReadOnly = true;
-                }
+                DataGridViewTextBoxCell nameCell = new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value = bn.Name
-                    };
+                    Value = bn.Name
+                };
+                row.Cells.Add(nameCell);
+                boneNameList.Add(nameCell);
 
-                    row.Cells.Add(textboxcell);
-                    boneNameList.Add(textboxcell);
-                }
+                DataGridViewTextBoxCell parentIndexCell = new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value = bn.ParentIndex + ""
-                    };
+                    Value = bn.ParentIndex + ""
+                };
+                row.Cells.Add(parentIndexCell);
+                boneParentList.Add(parentIndexCell);
 
-                    row.Cells.Add(textboxcell);
-                    boneParentList.Add(textboxcell);
-                }
+                DataGridViewTextBoxCell childIndexCell = new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value = bn.ChildIndex + ""
-                    };
+                    Value = bn.ChildIndex + ""
+                };
+                row.Cells.Add(childIndexCell);
+                boneChildList.Add(childIndexCell);
 
-                    row.Cells.Add(textboxcell);
-                    boneChildList.Add(textboxcell);
-                }
+                row.Cells.Add(new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value =
-                        bn.Translation.X + "," + bn.Translation.Y + "," + bn.Translation.Z
-                    };
-
-                    row.Cells.Add(textboxcell);
-                }
+                    Value = bn.Translation.X + "," + bn.Translation.Y + "," + bn.Translation.Z
+                });
+                row.Cells.Add(new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value = bn.Scale.X + "," + bn.Scale.Y + "," + bn.Scale.Z
-                    };
-
-                    row.Cells.Add(textboxcell);
-                }
+                    Value = bn.Scale.X + "," + bn.Scale.Y + "," + bn.Scale.Z
+                });
+                row.Cells.Add(new DataGridViewTextBoxCell
                 {
-                    DataGridViewTextBoxCell textboxcell = new DataGridViewTextBoxCell
-                    {
-                        Value =
-                        bn.Rotation.X + "," + bn.Rotation.Y + "," + bn.Rotation.Z
-                    };
-
-                    row.Cells.Add(textboxcell);
-                }
-                dg.Rows.Add(row);
+                    Value = bn.Rotation.X + "," + bn.Rotation.Y + "," + bn.Rotation.Z
+                });
+                dataGridView.Rows.Add(row);
             }
 
-            f.Size = new System.Drawing.Size(550, 700);
-            p.Size = new System.Drawing.Size(400, 530);
-
-            currentY += 450;
-
-            Button button = new Button();
-            ButtonTips("保存你在Bones部分做出的修改。(改骨骼名称以及父骨骼ID)", button);
-            button.Text = "Modify";
-            button.Location = new System.Drawing.Point(435, 50);
-            button.Click += (s, e) =>
+            Label versionLabel = new Label
             {
-                for (int i2 = 0; i2 < targetFlver.Bones.Count; i2++)
+                Text = "FLVER Editor " + version,
+                Location = new System.Drawing.Point(10, f.Size.Height - 60),
+                Size = new System.Drawing.Size(300, 50)
+            };
+
+            Panel panel = new Panel
+            {
+                AutoScroll = true,
+                Location = new System.Drawing.Point(f.Size.Width - 125, 0),
+                Size = new System.Drawing.Size(125, f.Size.Height),
+            };
+            f.Controls.Add(panel);
+
+            Button buttonModify = new Button
+            {
+                Text = "保存修改",
+                Location = new System.Drawing.Point(20, 50)
+            };
+            ButtonTips("保存你在Bones部分做出的修改。(改骨骼名称以及父骨骼ID)", buttonModify);
+            buttonModify.Click += (s, e) =>
+            {
+                for (int i = 0; i < targetFlver.Bones.Count; i++)
                 {
                     if (boneNameList.Count < targetFlver.Bones.Count)
                     {
-                        MessageBox.Show(
-                            "Bone does not match, something modified?\nWill not save bone info but will save other things."
-                        );
+                        MessageBox.Show("骨骼不匹配，将存储除骨骼外的其他修改");
                         break;
                     }
-                    targetFlver.Bones[i2].Name = boneNameList[i2].Value.ToString();
-                    targetFlver.Bones[i2].ParentIndex = short.Parse(boneParentList[i2].Value.ToString()); //parentList[i2].Text
-                    targetFlver.Bones[i2].ChildIndex = short.Parse(boneChildList[i2].Value.ToString());
+                    targetFlver.Bones[i].Name = boneNameList[i].Value.ToString();
+                    targetFlver.Bones[i].ParentIndex = short.Parse(boneParentList[i].Value.ToString()); //parentList[i].Text
+                    targetFlver.Bones[i].ChildIndex = short.Parse(boneChildList[i].Value.ToString());
                 }
                 AutoBackUp();
                 targetFlver.Write(flverName);
-                MessageBox.Show("Modification finished");
+                MessageBox.Show("修改完成");
             };
 
             var serializer = new JavaScriptSerializer();
             string serializedResult = serializer.Serialize(targetFlver.Bones);
 
-            Button button2 = new Button();
-            ButtonTips("打开材质编辑窗口。", button2);
-            button2.Text = "Material";
-            button2.Location = new System.Drawing.Point(435, 100);
-            button2.Click += (s, e) =>
+            Button buttonMaterial = new Button
+            {
+                Text = "材质编辑",
+                Location = new System.Drawing.Point(20, 100)
+            };
+            ButtonTips("打开材质编辑窗口。", buttonMaterial);
+            buttonMaterial.Click += (s, e) =>
             {
                 ModelMaterial();
             };
 
-            Button button3 = new Button();
-            ButtonTips("打开面片编辑(Mesh)窗口。", button3);
-            button3.Text = "Mesh";
-            button3.Location = new System.Drawing.Point(435, 150);
-            button3.Click += (s, e) =>
+            Button buttonMesh = new Button
+            {
+                Text = "面片编辑",
+                Location = new System.Drawing.Point(20, 150)
+            };
+            ButtonTips("打开面片编辑窗口。", buttonMesh);
+            buttonMesh.Click += (s, e) =>
             {
                 ModelMesh();
             };
 
-            Button button_dummy = new Button();
-            ButtonTips(
-                "打开辅助点(Dummy)窗口。辅助点包含了武器的一些剑风位置，伤害位置之类的信息。",
-                button_dummy
-            );
-            button_dummy.Text = "Dummy";
-            button_dummy.Location = new System.Drawing.Point(435, 200);
-            button_dummy.Click += (s, e) =>
+            Button buttonDummy = new Button
+            {
+                Text = "辅助点",
+                Location = new System.Drawing.Point(20, 200)
+            };
+            ButtonTips("打开辅助点(Dummy)窗口。辅助点包含了武器的一些剑风位置，伤害位置之类的信息。", buttonDummy);
+            buttonDummy.Click += (s, e) =>
             {
                 Dummies();
             };
 
-            Button button_importModel = new Button();
-            ButtonTips(
-                "导入外部模型文件，比如Fbx,Dae,Obj。但注意只有Fbx文件可以支持导入骨骼权重。\n"
+            Button buttonImportModel = new Button
+            {
+                Text = "导入模型",
+                Location = new System.Drawing.Point(20, 250)
+            };
+            ButtonTips("导入外部模型文件，比如Fbx,Dae,Obj。但注意只有Fbx文件可以支持导入骨骼权重。\n"
                     + "可以保留UV贴图坐标，切线法线的信息，但你还是得手动修改贴图信息的。\n"
                     + "另外，实验性质的加入了导入超过65535个顶点的面片集的功能。",
-                button_importModel
+                buttonImportModel
             );
-            button_importModel.Text = "ImportModel";
-            button_importModel.Font = new System.Drawing.Font(button.Font.FontFamily, 8);
-            button_importModel.Location = new System.Drawing.Point(435, 250);
-            button_importModel.Click += (s, e) =>
+            buttonImportModel.Click += (s, e) =>
             {
                 ImportFBX();
             };
 
-            Label thanks = new Label
+            Button buttonDeleteAll = new Button
             {
-                Text = "FLVER Editor " + version,
-                Location = new System.Drawing.Point(10, f.Size.Height - 60),
-                Size = new System.Drawing.Size(700, 50)
+                Text = "DeleteAll",
+                Location = new System.Drawing.Point(20, 300)
             };
+            buttonDeleteAll.Click += (s, e) =>
+            {
+                targetFlver.Meshes.Clear();
+                targetFlver.Materials.Clear();
+                AutoBackUp();
+                targetFlver.Write(flverName);
+                UpdateVertices();
+            };
+            ButtonTips("删除所有面片和材质，并保存修改。", buttonDeleteAll);
 
             f.Resize += (s, e) =>
             {
-                p.Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70);
-                button.Location = new System.Drawing.Point(f.Size.Width - 115, 50);
-                button2.Location = new System.Drawing.Point(f.Size.Width - 115, 100);
-                button3.Location = new System.Drawing.Point(f.Size.Width - 115, 150);
-                button_dummy.Location = new System.Drawing.Point(f.Size.Width - 115, 200);
-                button_importModel.Location = new System.Drawing.Point(f.Size.Width - 115, 250);
-
-                thanks.Location = new System.Drawing.Point(10, f.Size.Height - 60);
-                dg.Size = new System.Drawing.Size(f.Size.Width - 200, 450);
+                versionLabel.Location = new System.Drawing.Point(10, f.Size.Height - 60);
+                panel.Location = new System.Drawing.Point(f.Size.Width - 125, 0);
+                panel.Size = new System.Drawing.Size(125, f.Size.Height);
             };
-            p.Size = new System.Drawing.Size(f.Size.Width - 150, f.Size.Height - 70);
 
-            p.Controls.Add(dg);
-            f.Controls.Add(button);
-            f.Controls.Add(button2);
-            f.Controls.Add(button3);
-            f.Controls.Add(button_dummy);
-            f.Controls.Add(button_importModel);
-            f.Controls.Add(thanks);
+            f.Controls.Add(dataGridView);
+            f.Controls.Add(versionLabel);
+            panel.Controls.Add(buttonModify);
+            panel.Controls.Add(buttonMaterial);
+            panel.Controls.Add(buttonMesh);
+            panel.Controls.Add(buttonDummy);
+            panel.Controls.Add(buttonImportModel);
+            panel.Controls.Add(buttonDeleteAll);
             f.BringToFront();
             Application.Run(f);
         }

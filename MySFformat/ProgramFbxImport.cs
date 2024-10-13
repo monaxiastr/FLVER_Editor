@@ -1,11 +1,9 @@
 ﻿using Assimp;
 using SoulsFormats;
-using SoulsFormats.KF4;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace MySFformat
@@ -125,7 +123,7 @@ namespace MySFformat
 
             bool flipYZ = MessageBox.Show(
                 "Switch YZ axis values? \n It may help importing some fbx files.",
-                "Set", MessageBoxButtons.YesNo ) == DialogResult.Yes;
+                "Set", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool setLOD = true;
 
@@ -153,7 +151,7 @@ namespace MySFformat
 
             foreach (var material in model.Materials)
             {
-                
+
                 FLVER.Material newMaterial = new FLVER.Material
                 {
                     Name = res.Substring(res.LastIndexOf('\\') + 1) + "_" + material.Name,
@@ -162,7 +160,7 @@ namespace MySFformat
                     Textures = defaultTextures,
                     GXBytes = new byte[] { 71, 88, 77, 68, 242, 0, 0, 0, 28, 0, 0, 0, 1, 0, 0, 0, 31, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 71, 88, 48, 48, 100, 0, 0, 0, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 48, 52, 100, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 64, 0, 0, 128, 63, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 160, 64, 0, 0, 0, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 56, 48, 100, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 88, 56, 49, 100, 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 127, 100, 0, 0, 0, 12, 0, 0, 0 }
                 };
-                
+
                 if (setAmbientAsDiffuse)
                 {
                     if (material.HasTextureEmissive)
@@ -349,7 +347,7 @@ namespace MySFformat
                         }
                     }
                 }
-                newMesh.FaceSets = new List<FLVER.FaceSet>{ generateBasicFaceSet() };
+                newMesh.FaceSets = new List<FLVER.FaceSet> { generateBasicFaceSet() };
                 newMesh.FaceSets[0].Vertices = faceIndexs.ToArray();
                 if (newMesh.FaceSets[0].Vertices.Length > 65534)
                 {
@@ -414,6 +412,45 @@ namespace MySFformat
                 Unk10 = 1,
                 Unk11 = true
             });
+        }
+
+        static int FindFLVER_Bone(FLVER f, string name)
+        {
+            for (int flveri = 0; flveri < f.Bones.Count; flveri++)
+                if (f.Bones[flveri].Name == name)
+                    return flveri;
+            return -1;
+        }
+
+        /// <summary>
+        /// Dummy Text
+        /// </summary>
+        /// <param name="newBones">The new bones list</param>
+        public static void BoneWeightShift(List<FLVER.Bone> newBones)
+        {
+            //Step 1 build a int table to map old bone index -> new bone index
+            int[] boneMapTable = new int[targetFlver.Bones.Count];
+            for (int i = 0; i < targetFlver.Bones.Count; i++)
+                boneMapTable[i] = FindNewBoneIndex(newBones, i);
+
+            //Step 2 according to the table, change all the vertices' bone weights
+            foreach (var v in vertices)
+                for (int i = 0; i < v.BoneIndices.Length; i++)
+                    v.BoneIndices[i] = boneMapTable[v.BoneIndices[i]];
+        }
+
+        //Find Bone index, if no such bone find its parent's index
+        public static int FindNewBoneIndex(List<FLVER.Bone> newBones, int oldBoneIndex)
+        {
+            while (oldBoneIndex >= 0)
+            {
+                string oldBoneName = targetFlver.Bones[oldBoneIndex].Name;
+                for (int i = 0; i < newBones.Count; i++)
+                    if (oldBoneName == newBones[i].Name)
+                        return i;
+                oldBoneIndex = targetFlver.Bones[oldBoneIndex].ParentIndex;
+            }
+            return 0;
         }
 
     }
